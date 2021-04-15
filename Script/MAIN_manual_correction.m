@@ -1,7 +1,6 @@
-function MAIN_manual_correction(original_image)
+function MAIN_manual_correction(raw_image)
     %% Load image and Setup global variables:
-    [~,fld_name] = fileparts(original_image);
-    % Find the data file list in tmp folder:
+    [~,fld_name] = fileparts(raw_image);
     listing = dir(fullfile('tmp',fld_name,['dat_probmap*.mat']));
     dat_probmap_list = [];
     for fidx = 1:numel(listing)
@@ -14,7 +13,6 @@ function MAIN_manual_correction(original_image)
     dat_probmap_list = sort(dat_probmap_list);
     % Global variable:
     xy_pos = [];
-    I_sub = [];
     xy_idx = [];
     parent_idx = [];
     grid_size = 0;
@@ -35,9 +33,9 @@ function MAIN_manual_correction(original_image)
     latest_minus = 0;
     %% Load the latest data:
     load_data();    
-    %% Load original image and probability image
-    I = imread(['data/original/' original_image]); % Uint8
-    I_probs = imread(['data/probability_map/' original_image]);
+    %% Load raw image and probability image
+    I = imread(['../data/raw/' raw_image]); % Uint8
+    I_probs = imread(['../data/probability_map/' raw_image]);
     I = imresize(I,size(I_probs));
     fmain=figure('Visible','on');
     axmain = gca;
@@ -94,14 +92,13 @@ function MAIN_manual_correction(original_image)
         % Load the latest data:
         if numel(dat_probmap_list)
             fload = dat_probmap_list(end-latest_minus);
-            datfile = load(fullfile('tmp',fld_name,['dat_probmap' num2str(fload)]),'xy_pos','I_sub','grid_size','xy_idx','parent_idx','score','xymap');
+            datfile = load(fullfile('tmp',fld_name,['dat_probmap' num2str(fload)]),'xy_pos','grid_size','xy_idx','parent_idx','score','xymap');
         else
             msgbox('No data found. Do hexagon expansion first');
         end
         if numel(datfile)
             % Data loaded pre alignment
             xy_pos = datfile.xy_pos;
-            I_sub = datfile.I_sub;
             xy_idx = datfile.xy_idx;
             parent_idx = datfile.parent_idx;
             grid_size = datfile.grid_size;
@@ -268,12 +265,11 @@ function MAIN_manual_correction(original_image)
                 Iouttmp(I_facet_auto)=0;
                 Iouttmp(I_border_auto)=1;
                 
-                mkdir('data/weka_label');
-                imwrite(Iouttmp,fullfile('data/weka_label/',[fld_name '.tif']),'WriteMode','overwrite','Compression','none');
+                mkdir('../data/label');
+                imwrite(Iouttmp,fullfile('../data/label/',[fld_name '.tif']),'WriteMode','overwrite','Compression','none');
                 
             % Close figure
                 if nargin==0
-                    %figure;imshowpair(I_sub,I_score_auto);
                     msgbox('Successful');
                 end
     end
@@ -285,17 +281,24 @@ function MAIN_manual_correction(original_image)
                 I_label_auto(I_border_auto)=2;
                 I_facet_auto_ = I_facet_auto;
                 I_border_auto_ = I_border_auto;
-            % Make huge non-eye layer:
-                I_non_eye = ~conv2(double(I_facet_auto_ | I_border_auto_),ones(30,30),'same');
+            % Make huge non-eye layer (not used for now)
+                %I_non_eye = ~conv2(double(I_facet_auto_ | I_border_auto_),ones(30,30),'same');
             
             % Export omatidia's borders and facets
                 % Export for weka classifier
-                mkdir('data/weka_label');
+                mkdir('../data/label');
                 Iouttmp = uint8(I_facet_auto_<0)+2;
                 Iouttmp(I_facet_auto_)=0;
                 Iouttmp(I_border_auto_)=1;
-                mkdir('data/weka_label/');
-                imwrite(Iouttmp,fullfile('data/weka_label/',[fld_name '.tif']),'WriteMode','overwrite','Compression','none');
+                imwrite(Iouttmp,fullfile('../data/label/',[fld_name '.tif']),'WriteMode','overwrite','Compression','none');
+                % Save to training folder if needed
+                answer = questdlg('Save the aligned label and raw image to the training folder?','Next step','Yes','No','No');
+                if strcmp(answer,'Yes')
+                    mkdir('../data/training_label');
+                    imwrite(Iouttmp,fullfile('../data/training_label/',[fld_name '.tif']),'WriteMode','overwrite','Compression','none');
+                    mkdir('../data/training_raw');
+                    imwrite(I,fullfile('../data/training_raw/',[fld_name '.tif']),'WriteMode','overwrite','Compression','none');
+                end
     end
     %% Align label:
     function [] = align_label()
@@ -310,18 +313,17 @@ function MAIN_manual_correction(original_image)
         else
             [Iout,datapts] = aligngui({I_label_auto,xy_pos},(I_facet_auto>0)+(I_border_auto>0)*0.5,I);
         end
-        save(datapts_location,'datapts');M
-        mkdir('data/aligned_label');
-        mkdir('data/trimmed_original');
+        save(datapts_location,'datapts');
         
         % Select manually added mask and not align
             xy_pos_aligned = Iout{2};
-            idselect = find((xy_select==2)|((xy_select<crr_deletelevel)));            
+            idselect = find((xy_select==2));
             xy_pos_aligned(idselect,:) = xy_pos(idselect,:);
         % Remap everything after alignment (automatic + manual)
             answer = questdlg('Proceed with remapping and generating new aligned label?','Next step','Yes','No','Cancel','Cancel');
             if strcmp(answer,'Yes')
                 remap_coordinate_after_alignment;
+                export_label_remapped;
             end
     end
     %% Remap everything:
@@ -333,7 +335,6 @@ function MAIN_manual_correction(original_image)
             xy_idx_aligned = xy_idx*0;
             
             xy_idx_aligned(idselect,:)=xy_idx_aligned_;
-            export_label_remapped;
     end
     %% set hotkey:
     function keypress(~, eventdata, ~)
