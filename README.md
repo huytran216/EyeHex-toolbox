@@ -26,7 +26,7 @@ Browse to `Script/` folder via MATLAB and type `MAIN_manual_segmentation(input_f
 ```matlab
     MAIN_manual_segmentation('img1.tif')
 ```
-With the GUI, you can press <kbd>A</kbd> to add ommatidia patches, <kbd>R<\kbd> to remove patches, <kbd>CTRL</kbd>+<kbd>E</kbd> to export the ommatidia and boundaries labeled image to `Script/data/weka_label/` folder.  
+With the GUI, you can press <kbd>A</kbd> to add ommatidia patches, <kbd>R</kbd> to remove patches, <kbd>CTRL</kbd>+<kbd>E</kbd> to export the ommatidia and boundaries labeled image to `Script/data/weka_label/` folder.  
 Press <kbd>F1</kbd> to check out all the hotkeys.
 
 ## Automated preprocessing with machine learning
