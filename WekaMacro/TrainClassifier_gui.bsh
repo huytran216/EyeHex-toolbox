@@ -67,9 +67,6 @@ segmentator.trainClassifier();
 estimatedTime = System.currentTimeMillis() - startTime;
 IJ.log( "** Finished training classifier after " + estimatedTime + " ms **" );
 
-// If input test is empty then use default path
-if inputTestDir
-getInfo("macro.filepath");
 
 // get list of input images
 listOfFiles = inputTestDir.listFiles();
