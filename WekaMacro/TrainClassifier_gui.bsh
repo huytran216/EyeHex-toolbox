@@ -54,7 +54,6 @@ for ( i = 0; i < listOfOriFiles.length; i++ )
         {        
         	// imageLabel.show();           
             // apply classifier and get results (0 indicates number of threads is auto-detected)
-            int[] myclass = {0,1,2};
              segmentator.addLabeledData( imageOri, imageLabel);
         }
     }
@@ -80,7 +79,7 @@ for ( i = 0; i < listOfFiles.length; i++ )
         if( image != null )
         {                   
             // apply classifier and get results (0 indicates number of threads is auto-detected)
-            result = segmentator.applyClassifier( image, 0, getProbs );
+            result = segmentator.applyClassifier( image, 0, true);
              
             // save result as TIFF in output folder
             outputFileName = listOfFiles[ i ].getName().replaceFirst("[.][^.]+$", "") + ".tif";
