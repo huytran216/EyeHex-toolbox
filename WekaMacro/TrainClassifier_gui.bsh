@@ -1,0 +1,108 @@
+#@ File(label="Original image directory", description="Select directory with original images", style="directory") inputOriDir
+#@ File(label="Labeled image directory", description="Select directory with labeled images", style="directory") inputLabelDir
+#@ File(label="Input image directory", description="Select directory with testing images", style="directory") inputTestDir
+#@ File(label="Output image directory", description="Select the output directory", style="directory") outputTestDir
+
+import trainableSegmentation.*;
+import ij.IJ;
+import trainableSegmentation.utils.Utils;
+import ij.io.FileSaver;
+import ij.ImagePlus;
+import org.apache.commons.io.FilenameUtils;
+
+// starting time
+startTime = System.currentTimeMillis();
+
+// create segmentator
+segmentator = new WekaSegmentation();
+
+import hr.irb.fastRandomForest.FastRandomForest;
+// create random forest classifier
+rf = new FastRandomForest();
+// set number of trees in the forest
+rf.setNumTrees( 100 );
+// set number of features per tree (0 for automatic selection)
+rf.setNumFeatures(0 );
+// set random seed
+rf.setSeed( (new java.util.Random()).nextInt() );
+  
+// set classifier
+segmentator.setClassifier( rf );
+
+
+// get list of input images
+listOfOriFiles = inputOriDir.listFiles();
+listOfLabelFiles = inputLabelDir.listFiles();
+
+for ( i = 0; i < listOfOriFiles.length; i++ )
+{
+	// Get file name:
+	filename = FilenameUtils.getName(listOfOriFiles[ i ].getAbsolutePath());
+
+	fileori = inputOriDir + "/" + filename;
+	filelabel = inputLabelDir + "/" + filename;
+	
+    // process only files (do not go into sub-folders)    
+    if ( (new File(fileori).exists())&&(new File(filelabel).exists()))
+    {
+    	IJ.log( "** Processing image " + filename);
+    	
+        // try to read file as image
+        imageOri = IJ.openImage( fileori );
+        imageLabel = IJ.openImage( filelabel );
+        if( (imageOri != null)&&(imageLabel != null) )
+        {        
+        	// imageLabel.show();           
+            // apply classifier and get results (0 indicates number of threads is auto-detected)
+            int[] myclass = {0,1,2};
+             segmentator.addLabeledData( imageOri, imageLabel);
+        }
+    }
+}
+
+// Train
+segmentator.trainClassifier();
+
+// print elapsed time
+estimatedTime = System.currentTimeMillis() - startTime;
+IJ.log( "** Finished training classifier after " + estimatedTime + " ms **" );
+
+// If input test is empty then use default path
+if inputTestDir
+getInfo("macro.filepath");
+
+// get list of input images
+listOfFiles = inputTestDir.listFiles();
+for ( i = 0; i < listOfFiles.length; i++ )
+{
+    // process only files (do not go into sub-folders)
+    if( listOfFiles[ i ].isFile() )
+    {
+        // try to read file as image
+        image = IJ.openImage( listOfFiles[i].getCanonicalPath() );
+        if( image != null )
+        {                   
+            // apply classifier and get results (0 indicates number of threads is auto-detected)
+            result = segmentator.applyClassifier( image, 0, getProbs );
+             
+            // save result as TIFF in output folder
+            outputFileName = listOfFiles[ i ].getName().replaceFirst("[.][^.]+$", "") + ".tif";
+            new FileSaver( result ).saveAsTiff( outputTestDir.getPath() + File.separator + outputFileName );
+  
+            // force garbage collection (important for large images)
+            result = null; 
+            image = null;
+            System.gc();
+        }
+    }
+}
+// print elapsed time
+estimatedClassifyTime = System.currentTimeMillis() - startTime;
+IJ.log( "** Finished processing folder in " + estimatedClassifyTime + " ms **" );
+
+
+// save classifier into a file (.model)
+// segmentator.saveClassifier( modelPath_ + "/my-cool-trained-classifier.model" );
+
+
+
