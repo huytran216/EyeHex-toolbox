@@ -1,0 +1,11 @@
+
+*.pptx
+Script/data/probability_map/img2.tif
+Script/data/weka_label/img1.tif
+Script/tmp/img2/original_pos.mat
+Script/tmp/img2/saveprogress.mat
+Script/tmp/img2/saveprogress.mat
+Script/tmp_datatip.mat
+WekaMacro/Training_data/label/img1.tif
+WekaMacro/Training_data/original/img1.tif
+*.tif
