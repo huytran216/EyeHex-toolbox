@@ -1,6 +1,6 @@
-function MAIN_manual_segmentation(original_image)
+function MAIN_manual_segmentation(raw_image)
     %% Load image and Setup global variables
-    [~,fld_name] = fileparts(original_image);
+    [~,fld_name] = fileparts(raw_image);
     % Set empty data shells
     xy_pos = [];
     I_sub = [];
@@ -26,8 +26,8 @@ function MAIN_manual_segmentation(original_image)
     crr_deletelevel = 0;
     crr_addlevel = 1;
     first_refreshed = true;
-    %% Load original image and probability image
-    I = imread(['data/original/' original_image]); % Uint8
+    %% Load raw image and probability image
+    I = imread(['data/raw/' raw_image]); % Uint8
     I_probs = mean(I(:,:,:),3);
     I = imresize(I,size(I_probs));
     fmain=figure('Visible','on');
@@ -78,9 +78,9 @@ function MAIN_manual_segmentation(original_image)
     function refreshed()
         viewmode
         % Different view modes:
-            % viewmode = 0: show original image only + added points
-            % viewmode = 1: show original image only + added points + mask
-            % viewmode = 2: show original image only
+            % viewmode = 0: show raw image only + added points
+            % viewmode = 1: show raw image only + added points + mask
+            % viewmode = 2: show raw image only
         
         if ~first_refreshed
             L = get(gca,{'xlim','ylim'});
@@ -224,11 +224,13 @@ function MAIN_manual_segmentation(original_image)
         
             % Export omatidia's borders and facets
                 % Export for weka classifier
-                mkdir('data/weka_label');
+                mkdir('data/training_raw');
+                imwrite(I,fullfile('../data/training_raw/',[fld_name '.tif']),'WriteMode','overwrite','Compression','none');
                 Iouttmp = uint8(I_facet_tmp<0)+2;
                 Iouttmp(I_facet_tmp)=0;
                 Iouttmp(I_border_tmp)=1;
-                imwrite(Iouttmp,fullfile('data/weka_label/',[fld_name '.tif']),'WriteMode','overwrite','Compression','none');
+                mkdir('data/training_label');
+                imwrite(Iouttmp,fullfile('../data/training_label/',[fld_name '.tif']),'WriteMode','overwrite','Compression','none');
                 msgbox('Label exported');
     end
     %% Remap everything:
