@@ -73,6 +73,7 @@ Once done, press <kbd>CTRL</kbd> + <kbd>E</kbd> to export the image label to `da
 
 ![alt text](https://github.com/huytran216/EyeHex-toolbox/blob/main/Manual/Img/Manual_correction.png?raw=true)
 *Manual correction after automatic ommatidia detection: (A,C) raw image overlaid with automatic ommatidia segmentation. (B-D) manually corrected ommatidia segmentation. Panel C-D is a zoom-in region of panel A-B. In (A-D), automatically detected ommatidia are shown as green circles, manually added ommatidia are shown as red circles and manually removed ommatidia are shown as red dots. The example image (img2.tif) is taken from a brightfield microscope.*
+
 You can press <kbd>F1</kbd> to access all the hotkeys (zoom in/out, save/load progress).
 
 ## Label alignment
