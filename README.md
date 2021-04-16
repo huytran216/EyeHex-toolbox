@@ -46,7 +46,7 @@ A user interface will appear, prompting you to select the path to directories of
 
 The WEKA plug-in in Fiji will train the classifier with the training data (in `data/training_raw/` and `data/training_label/`) and apply the classifier to all images in `data/raw/` folder. For each image, a tiff file containing the probability map of the ommatidia region is created and saved to `data/probability_map/` folder.  
 
-![alt text](https://github.com/huytran216/EyeHex-toolbox/blob/main/Manual/Img/Machine_learning.png?raw=true)
+![alt text](https://github.com/huytran216/EyeHex-toolbox/blob/main/Manual/Img/MachineLearning.png?raw=true)
 *Automated preprocessing with WEKA-Fiji tool: The trained classifier will convert the raw image (A) in data/raw/ folder to the ommatidia probability map (B) and save the result to data/label/ folder.*
 
 ## Hexagonal grid expansion
