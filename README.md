@@ -83,7 +83,7 @@ As the hexagonal grid expansion is performed based on the probability map, rathe
 1. Press <kbd>Enter</kbd>. The program will automatically generate the aligned label image and overwrite the current one in `data/label/` folder. You will also have an option to export it as training data for the machine learning module (similar to the first manual segmentation process).
 
 # License
-See License.md
+See License.md  
 Copyright (C) 2021 Huy Tran
 
 ## References
