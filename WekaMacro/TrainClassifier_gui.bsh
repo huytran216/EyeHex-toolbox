@@ -1,7 +1,9 @@
-#@ File(label="Training raw image directory", description="Absolute path to data/training_raw", style="directory") inputOriDir
-#@ File(label="Training label directory", description="Absolute path to data/training_label", style="directory") inputLabelDir
-#@ File(label="Input image directory", description="Absolute path to data/raw", style="directory") inputTestDir
-#@ File(label="Output image directory", description="Absolute path to data/probability_map", style="directory") outputTestDir
+#@ File(label="Pth to data folder", description="Absolute path to data folder", style="directory") inputDir
+
+inputOriDir = new File(inputDir + "/training_raw");
+inputLabelDir = new File(inputDir + "/training_label");
+inputTestDir = new File(inputDir + "/raw");
+outputTestDir = new File(inputDir + "/probability_map");
 
 import trainableSegmentation.*;
 import ij.IJ;
@@ -28,6 +30,8 @@ rf.setSeed( (new java.util.Random()).nextInt() );
   
 // set classifier
 segmentator.setClassifier( rf );
+
+print(inputOriDir);
 
 listOfOriFiles = inputOriDir.listFiles();
 listOfLabelFiles = inputLabelDir.listFiles();
