@@ -10,3 +10,5 @@ WekaMacro/Training_data/label/img1.tif
 WekaMacro/Training_data/original/img1.tif
 *.mat
 Manual/~$Readme.docx
+*.tif
+*.mat

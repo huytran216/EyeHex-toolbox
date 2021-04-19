@@ -22,7 +22,7 @@ I_sub = I;
 xi=[];
 yi=[];
 while numel(xi)~=3
-    title('Select three adjacent omatidia:');
+    title('Select three adjacent omatidia. Then press Enter.');
     [xi,yi] = getpts(hmain);
 end
 xy0 = [yi;xi]';
