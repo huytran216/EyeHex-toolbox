@@ -18,6 +18,7 @@ if exist(['../data/probability_map/' img_name '_inout.tif'],'file')
 else
     I_bg = I*0+1;
 end
+I_bg = ~imfill(~I_bg,8,'holes');
 I_bg = double(I_bg);
 %% Show image:
 hmain = figure;

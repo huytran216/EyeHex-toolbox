@@ -239,7 +239,7 @@ function MAIN_manual_segmentation(raw_image)
     end
     %% Export remapped label
     function export_label()
-        if ~numel(xy_idx)
+        if ~numel(xy_pos)
             msgbox('Please mask something');
             return;
         end
@@ -307,7 +307,7 @@ function MAIN_manual_segmentation(raw_image)
         save(fullfile('tmp',fld_name,'saveprogress_manual.mat'),...
             'xy_pos','xy_select',...
             'map_patch_idx','crr_patch_idx','valid_patch_idx',...
-            'crr_inout_idx','valid_inout_idx','I_inout',...
+            'I_inout',...
             'I_facet_auto','I_border_auto');
     end
     %% set hotkey:

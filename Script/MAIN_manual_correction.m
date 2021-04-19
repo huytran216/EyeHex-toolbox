@@ -1,5 +1,5 @@
 function MAIN_manual_correction(raw_image)
-    %% Load image and Setup global variables:
+    %% Setup global variables:
     [~,fld_name] = fileparts(raw_image);
     listing = dir(fullfile('tmp',fld_name,['dat_probmap*.mat']));
     dat_probmap_list = [];
@@ -35,6 +35,7 @@ function MAIN_manual_correction(raw_image)
     load_data();    
     %% Load raw image and probability image
     I = imread(['../data/raw/' raw_image]); % Uint8
+    I_alt = I; alt_name = ''; show_alt = false;
     I_probs = imread(['../data/probability_map/' raw_image]);
     I = imresize(I,size(I_probs));
     fmain=figure('Visible','on');
@@ -44,6 +45,7 @@ function MAIN_manual_correction(raw_image)
     I_facet_manual = []; % Facet label generated manually
     I_facet_auto = [];   % Facet mask generated automatically
     I_label_auto = [];   % Label mask (facet + border) generated automatically
+    
     %% Set behavior:
     refreshed();
     hManager = uigetmodemanager(fmain);
@@ -119,14 +121,45 @@ function MAIN_manual_correction(raw_image)
         crr_deletelevel = 0;
         first_refreshed = true;
     end
+    load_alt_img(1);
+    function load_alt_img(modifier)
+        if ~exist('modifier','var')
+            I_alt = I;
+            alt_name = '';
+            return;
+        end
+        % Find file in raw_stack folder:
+        listing_tmp = dir(fullfile('../data/raw_stack',[fld_name '_*.tif']));
+        if numel(listing)
+            for i=1:numel(listing_tmp)
+                if strcmp(listing_tmp(i).name,alt_name)
+                    break;
+                end
+            end
+            i = i + modifier;
+            if i>numel(listing_tmp)
+                i = numel(listing_tmp);
+            end
+            if i<1
+                i = 1;
+            end
+            alt_name = listing_tmp(i).name;
+            I_alt = imread(fullfile('../data/raw_stack/',alt_name));
+        end
+    end
     %% Show the data:
     function refreshed()
         if ~first_refreshed
             L = get(gca,{'xlim','ylim'});
         end
         hold off;
+        if show_alt
+            I_show = I_alt;
+        else
+            I_show = I;
+        end
         if (viewmode<2)
-            imshow(I,'Parent',axmain);hold on;
+            imshow(I_show,'Parent',axmain);hold on;
         else
             imshow(I_probs,'Parent',axmain);hold on;
         end
@@ -151,7 +184,13 @@ function MAIN_manual_correction(raw_image)
         set(dcm_obj,'UpdateFcn',@NewCallback_axes);
 
         first_refreshed = false;
-        title([num2str(sum(idselect)) 'eyes found']);
+        
+        strmessage = [];
+        if show_alt
+            strmessage = [strmessage 'Stack: ' alt_name '. '];
+        end
+        strmessage = [strmessage  num2str(sum(idselect)) 'eyes found'];
+        title(strmessage,'Interpreter','none');
         
         save('tmp_datatip.mat','xy_pos','xy_idx');
     end
@@ -255,6 +294,10 @@ function MAIN_manual_correction(raw_image)
     end
     %% Export labels:
     function export_label(msg)
+        % Update title
+        title('Remaping coordinate on hexagonal grid...');
+        drawnow;
+        % Make manual mask
         get_manual_mask;
         % Remap first:
         idselect = find((xy_select>0)|(xy_select<crr_deletelevel));
@@ -422,7 +465,10 @@ function MAIN_manual_correction(raw_image)
                     'Save load progress:';...
                     '   Ctrl+H: save progress';...
                     '   Ctrl+L: load progress';...
-                    '   Ctrl+ arrow keys: load smaller/greater hexagonal grid';...
+                    '   Ctrl+ arrow keys: Change between stack layer, if any';...
+                    '       Left: prev stack';...
+                    '       Right: next stack';...
+                    '       Up/Down: Toogle between stacks and stiched image';...
                     'Export:';...
                     '   Ctrl+E: export labels';...
                     '   Ctrl+I: realign/remap/export labels';...
@@ -433,11 +479,14 @@ function MAIN_manual_correction(raw_image)
             if strcmp(eventdata.Modifier,'control')
                 switch eventdata.Key
                     case 'leftarrow'
-                        latest_minus = latest_minus+1;
+                        load_alt_img(-1);
                     case 'rightarrow'
-                        latest_minus = latest_minus-1;
+                        load_alt_img(+1);
+                    case 'uparrow'
+                        show_alt = ~show_alt;
+                    case 'downarrow'
+                        show_alt = ~show_alt;
                 end
-                load_data();
                 refreshed();
             else
                 xax = get(gca,'xlim');
