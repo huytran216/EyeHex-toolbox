@@ -3,7 +3,7 @@
 % then perform hexagonal grid expansion on all these images
 
 %% Open the file:
-fn=uigetfile('../data/probability_map/*.tif','Select the image(s) to process','MultiSelect','on');
+fn=uigetfile('../data/raw/*.tif','Select the image(s) to process','MultiSelect','on');
 
 %% Select hexagonal grid to expand:
 valid_expansion = zeros(1,numel(fn));
@@ -12,7 +12,7 @@ if ~iscell(fn)
 end
 for i=1:numel(fn)
     % Set location but don't expand right away
-    MAIN_expand_hexagon(fn{i},0);
+    MAIN_locate_origin(fn{i},0);
     go_next = false;
     while ~go_next
         answer = questdlg('Will you spawn the hexagonal grid with this origin?','Confirm','Yes','Redo','Skip','Redo');
@@ -21,7 +21,7 @@ for i=1:numel(fn)
                 valid_expansion(i) = true;
                 go_next = true;
             case 'Redo'
-                MAIN_expand_hexagon(fn{i},0);
+                MAIN_locate_origin(fn{i},0);
                 go_next = false;
             case 'Skip'
                 valid_expansion(i) = false;

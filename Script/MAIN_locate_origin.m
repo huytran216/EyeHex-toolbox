@@ -1,4 +1,4 @@
-function MAIN_expand_hexagon(img_name,automatic_expansion)
+function MAIN_locate_origin(img_name,automatic_expansion)
 %% perform automatic expansion if set_origin_only not specified
 if ~exist('automatic_expansion','var')
     automatic_expansion = false;
@@ -10,9 +10,18 @@ if strcmp(class(I),'uint8')
     I = double(I)/255;
 end
 foldername =['tmp/' img_name];
-hmain = figure;
-imshow(I);
 I_sub = I;
+%% Load background - eye inside/outside region
+if exist(['../data/probability_map/' img_name '_inout.tif'],'file')
+    I_bg =imread(['../data/probability_map/' img_name '_inout.tif']);
+    I_bg = I_bg<graythresh(I_bg);
+else
+    I_bg = I*0+1;
+end
+I_bg = double(I_bg);
+%% Show image:
+hmain = figure;
+imshow(I.*(1-I_bg));
 %% Select origin points for hexagonal axis
 %xy0 = [510 465 489 442 449 473];   % image 1
 %xy0 = [634 577 606 944 950 996];    % image 2
@@ -29,13 +38,7 @@ xy0 = [yi;xi]';
 %% 
 fun = @(x) sqrt(sum((x([3 4])-x([1 2])).^2));
 grid_size = (fun(xy0([1 4 2 5]))+fun(xy0([1 4 3 6]))+fun(xy0([3 6 2 5])))/6;
-%% Remove small particles and get background (non_eyes) pixels 
-threshold=0.1;
-I1 = bwareaopen(I>threshold,100);
-I2=double(I1);
-Ibg = imfill(I1,[1 1]);
-I_bg = xor(Ibg,I1);
-imshow(I_bg);
+
 %% Create filled circle
 [I_circle,x0,y0,~] = create_I_circle(12,0.9);
 save('Icircle.mat','x0','y0','I_circle');
