@@ -40,7 +40,7 @@ Try to add patches both at the middle and near the edges of the eye to get the m
 Press <kbd>F1</kbd> to check out all the hotkeys.
 
 ## Automated preprocessing with machine learning
-This step allows to generate the probability image of ommatidia region, in contrast to the boundary region, based on the trained classifier using the data from the previous step. Here, a macro for Fiji is provided to easy load the training data and apply the apply the classifier to the all eye images.  
+This step allows to generate the probability image of ommatidia region, in contrast to the boundary region, based on the trained classifier using the data from the previous step. Here, a macro for Fiji is provided to easily load the training data and apply the classifier to the all eye images.  
 Start Fiji and run the macro TrainClassifier_gui.bsh in WekaMacro/ folder (by dragging the file to Fiji interface and press <kbd>F5</kbd>).  
 A user interface will appear, prompting you to select the path to directories of the data/ folder in the EyeHex toolbox.  
 
