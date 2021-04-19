@@ -6,9 +6,9 @@ function MAIN_manual_segmentation(raw_image)
     I_sub = [];
     xy_idx = [];
     
-    % Define segmentation patches
+    % Define index for segmentation patches
     crr_patch_idx = 0;      % Idx of the latest patch
-    map_patch_idx = [];    % Patch index for each facets
+    map_patch_idx = [];     % Patch index for each facets
     valid_patch_idx = [];   % Which index is valid (not deleted)
     color_patch_idx = rand(20,3);   % color map
     
@@ -28,14 +28,18 @@ function MAIN_manual_segmentation(raw_image)
     first_refreshed = true;
     %% Load raw image and probability image
     I = imread(['../data/raw/' raw_image]); % Uint8
+    if size(I,3)==1
+        % Make color image
+        I = cat(3,I,I,I);
+    end
     I_probs = mean(I(:,:,:),3);
     I = imresize(I,size(I_probs));
     fmain=figure('Visible','on');
     axmain = gca;
-    viewmode = 2;
-    I_border_auto = zeros(size(I,1),size(I,2));  % Border generated automatically    
-    I_facet_auto = zeros(size(I,1),size(I,2));   % Facet mask generated automatically
-    I_label_auto = [];   % Label mask (facet + border) generated automatically
+    viewmode = 2;                               % Show everything first
+    I_border_auto = zeros(size(I,1),size(I,2)); % Border generated automatically    
+    I_facet_auto = zeros(size(I,1),size(I,2));  % Facet mask generated automatically
+    I_inout = zeros(size(I,1),size(I,2))+2;     % Inside region mask, positive (in) and negative (out)
     %% Set behavior:
     refreshed();
     hManager = uigetmodemanager(fmain);
@@ -79,8 +83,8 @@ function MAIN_manual_segmentation(raw_image)
         viewmode
         % Different view modes:
             % viewmode = 0: show raw image only + added points
-            % viewmode = 1: show raw image only + added points + mask
-            % viewmode = 2: show raw image only
+            % viewmode = 1: show raw image only
+            % viewmode = 2 (default): show raw image + added points + mask
         
         if ~first_refreshed
             L = get(gca,{'xlim','ylim'});
@@ -93,7 +97,7 @@ function MAIN_manual_segmentation(raw_image)
         I_border_tmp = I_border_auto*0;
         
         for i=1:crr_patch_idx
-            if (viewmode==2)
+            if (viewmode~=1)
                 if valid_patch_idx(i)
                     % Draw picture
                     I_facet_tmp = I_facet_tmp | (I_facet_auto==i);
@@ -101,18 +105,22 @@ function MAIN_manual_segmentation(raw_image)
                 end
             end
         end
+        
+        % Show inout image
         if viewmode==2
-            Itmp = bsxfun(@times, Itmp, cast(~I_border_tmp, 'like', Itmp));
+            Itmp1 = Itmp(:,:,3);Itmp1(I_inout==0) = 1; Itmp(:,:,3) = Itmp1;
+            Itmp1 = Itmp(:,:,1);Itmp1(I_inout==1) = 1; Itmp(:,:,1) = Itmp1;
         end
+        % Show border image
+        Itmp = bsxfun(@times, Itmp, cast(~I_border_tmp, 'like', Itmp));
         
         imshow(Itmp,'Parent',axmain);
         hold on;
 
-        
         for i=1:crr_patch_idx
             idselect = (map_patch_idx == i);
             color = color_patch_idx(mod(i,size(color_patch_idx,1))+1,:);
-            if (viewmode>0)
+            if (viewmode~=1)
                 % Draw data points
                 if valid_patch_idx(i)
                     scatter(xy_pos(idselect,2),xy_pos(idselect,1),120,'Marker','o','MarkerEdgeColor','r','MarkerFaceColor',color,'Parent',axmain); hold on;
@@ -121,7 +129,6 @@ function MAIN_manual_segmentation(raw_image)
                 end
             end
         end
-
         
         if ~first_refreshed
             set(gca,{'xlim','ylim'},L);
@@ -169,6 +176,30 @@ function MAIN_manual_segmentation(raw_image)
             refreshed();
         end
     end
+%% Add inside region
+    function add_inout_region(isin)
+        switch isin
+            case 0
+                title('Select region inside the eye');
+            case 1
+                title('Select region outside the eye');
+            case 2
+                title('Select an inside/outside region to remove');
+        end
+        drawnow;
+        % Select a free region
+        roi = imfreehand(axmain);
+        bw = createMask(roi);
+        switch isin
+            case 0
+                I_inout(bw) = 0;
+            case 1
+                I_inout(bw) = 1;
+            case 2
+                I_inout(bw) = 2;
+        end
+        refreshed();
+    end
 %% Get label from parameters
     function [I_facet_auto,I_border_auto]=get_label(xy_select,offset,xy_idx,xy_pos)
         % Select automatically added mask
@@ -208,6 +239,10 @@ function MAIN_manual_segmentation(raw_image)
     end
     %% Export remapped label
     function export_label()
+        if ~numel(xy_idx)
+            msgbox('Please mask something');
+            return;
+        end
         % Redo label:
         I_facet_auto = I_facet_auto*0;
         I_border_auto = I_border_auto*0;
@@ -237,10 +272,14 @@ function MAIN_manual_segmentation(raw_image)
                 Iouttmp(I_border_tmp)=1;
                 mkdir('../data/training_label');
                 imwrite(Iouttmp,fullfile('../data/training_label/',[fld_name '.tif']),'WriteMode','overwrite','Compression','none');
+                if any(I_inout~=2)
+                    imwrite(uint8(I_inout),fullfile('../data/training_label/',[fld_name '_inout.tif']),'WriteMode','overwrite','Compression','none');
+                end
             % Refresh screen:    
                 refreshed();
                 msgbox('Label exported');
-           
+            % Prepare probability_map folder
+                mkdir('../data/probability_map');
     end
     %% Remap everything:
     function xy_idx_new = remap_coordinate_after_alignment(crr_patch_idx)
@@ -262,6 +301,15 @@ function MAIN_manual_segmentation(raw_image)
             I_facet_auto(I_facet_tmp)=crr_patch_idx;
             I_border_auto(I_border_tmp)=crr_patch_idx;
     end
+    %% Save progress:
+    function save_progress()
+        mkdir('tmp',fld_name);
+        save(fullfile('tmp',fld_name,'saveprogress_manual.mat'),...
+            'xy_pos','xy_select',...
+            'map_patch_idx','crr_patch_idx','valid_patch_idx',...
+            'crr_inout_idx','valid_inout_idx','I_inout',...
+            'I_facet_auto','I_border_auto');
+    end
     %% set hotkey:
     function keypress(~, eventdata, ~)
         switch eventdata.Key
@@ -273,6 +321,15 @@ function MAIN_manual_segmentation(raw_image)
             case 'a'
                 % add new cells
                 add_region();
+            case 'i'
+                % add inside eye region
+                add_inout_region(0);
+            case 'o'
+                % add outside eye region
+                add_inout_region(1);
+            case 'p'
+                % remove inside/outside region
+                add_inout_region(2);
             case 'e'
                 if strcmp(eventdata.Modifier,'control')
                     export_label();
@@ -280,8 +337,7 @@ function MAIN_manual_segmentation(raw_image)
             case 'h'
                 % save progress
                 if strcmp(eventdata.Modifier,'control')
-                    mkdir('tmp',fld_name);
-                    save(fullfile('tmp',fld_name,'saveprogress_manual.mat'),'xy_pos','xy_select','map_patch_idx','crr_patch_idx','valid_patch_idx','I_facet_auto','I_border_auto');
+                    save_progress();
                     refreshed();
                     msgbox('Save successfully');
                 end
@@ -289,7 +345,11 @@ function MAIN_manual_segmentation(raw_image)
                 % load progress
                 try
                     if strcmp(eventdata.Modifier,'control')
-                        load(fullfile('tmp',fld_name,'saveprogress_manual.mat'),'xy_pos','xy_select','map_patch_idx','crr_patch_idx','valid_patch_idx','I_facet_auto','I_border_auto');
+                        load(fullfile('tmp',fld_name,'saveprogress_manual.mat'),...
+                            'xy_pos','xy_select',...
+                            'map_patch_idx','crr_patch_idx','valid_patch_idx',...
+                            'crr_inout_idx','valid_inout_idx','I_inout',...
+                            'I_facet_auto','I_border_auto');
                         refreshed();
                     end
                 catch
@@ -309,6 +369,8 @@ function MAIN_manual_segmentation(raw_image)
                     'Editing:';...
                     '   R: remove facets in selected region';...
                     '   A: add facets';...
+                    '   I: mark region inside the eye';... 
+                    '   O: mark region outside the eye';... 
                     'Save load progress:';...
                     '   Ctrl+H: save progress';...
                     '   Ctrl+L: load progress';...
@@ -362,8 +424,7 @@ function MAIN_manual_segmentation(raw_image)
         end
         switch answer
             case 'Yes'
-                mkdir(fullfile('tmp',fld_name));
-                save(fullfile('tmp',fld_name,'saveprogress_manual.mat'),'xy_pos','xy_select','map_patch_idx','crr_patch_idx','valid_patch_idx','I_facet_auto','I_border_auto');
+                save_progress();
                 refreshed();
                 delete(gcf);
             case 'No'

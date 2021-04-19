@@ -1,7 +1,7 @@
-function MAIN_expand_hexagon(img_name,set_origin_only)
+function MAIN_expand_hexagon(img_name,automatic_expansion)
 %% perform automatic expansion if set_origin_only not specified
-if ~exist('set_origin_only','var')
-    set_origin_only = false;
+if ~exist('automatic_expansion','var')
+    automatic_expansion = false;
 end
 [~,img_name] = fileparts(img_name);
 %% Load image
@@ -22,7 +22,7 @@ I_sub = I;
 xi=[];
 yi=[];
 while numel(xi)~=3
-    title('Select three adjacent omatidia. Then press Enter.');
+    title(['File: ' img_name '. Select three adjacent omamtidia, then press Enter.']);
     [xi,yi] = getpts(hmain);
 end
 xy0 = [yi;xi]';
@@ -37,7 +37,7 @@ Ibg = imfill(I1,[1 1]);
 I_bg = xor(Ibg,I1);
 imshow(I_bg);
 %% Create filled circle
-[I_circle,x0,y0,I_grid] = create_I_circle(12,0.9);
+[I_circle,x0,y0,~] = create_I_circle(12,0.9);
 save('Icircle.mat','x0','y0','I_circle');
 %% Image registration
 options = optimset('MaxFunEvals',40,'TolFun',1e-2);
@@ -62,13 +62,14 @@ xy_idx=[];xy_pos =[];parent_idx = [];
 xy_idx(1,:) = [0 0]; xy_pos(1,:) = [xy(1) xy(4)];
 xy_idx(2,:) = [1 0]; xy_pos(2,:) = [xy(2) xy(5)];
 xy_idx(3,:) = [0 1]; xy_pos(3,:) = [xy(3) xy(6)];
+hold on;
+line(xy_pos(1:3,2),xy_pos(1:3,1),'LineWidth',3,'LineStyle','none','Marker','o','MarkerSize',10,'color',[1 0 1],'MarkerFaceColor','r');
 parent_idx = [0 0; 0 0; 0 0];
 brightness([1 2 3]) = xy(end);
-I_sum=I_out;
 cnt=0;
 mkdir(foldername);
-save([foldername '/original_pos.mat'],'xy_idx','xy_pos','parent_idx','brightness','fun1','I_sub','I_sum','cnt','I_bg','grid_size','I_circle','foldername');
+save([foldername '/original_pos.mat'],'xy_idx','xy_pos','parent_idx','brightness','fun1','I_sub','cnt','I_bg','grid_size','I_circle','foldername','x0','y0');
 %% Expand eyes
-if ~set_origin_only
-    expand_hexagon;
+if automatic_expansion
+    expand_hexagon(img_name);
 end
