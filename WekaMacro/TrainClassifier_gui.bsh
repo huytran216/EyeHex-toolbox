@@ -135,7 +135,7 @@ startTime = System.currentTimeMillis();
 	        	// imageLabel.show();
 	        	int[] myclass = {0,1};
 	            // apply classifier and get results (0 indicates number of threads is auto-detected)
-	             segmentator_.addLabeledData( imageOri, imageLabel,myclass,10000);
+	             segmentator_.addLabeledData( imageOri, imageLabel,myclass,20000);
 	        }
 	    }
 	}
