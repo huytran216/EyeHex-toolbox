@@ -272,7 +272,7 @@ function MAIN_manual_segmentation(raw_image)
                 Iouttmp(I_border_tmp)=1;
                 mkdir('../data/training_label');
                 imwrite(Iouttmp,fullfile('../data/training_label/',[fld_name '.tif']),'WriteMode','overwrite','Compression','none');
-                if any(I_inout~=2)
+                if any(I_inout(:)~=2)
                     imwrite(uint8(I_inout),fullfile('../data/training_label/',[fld_name '_inout.tif']),'WriteMode','overwrite','Compression','none');
                 end
             % Refresh screen:    
