@@ -314,9 +314,9 @@ function MAIN_manual_correction(raw_image)
                 Iouttmp(I_facet_auto)=0;
                 Iouttmp(I_border_auto)=1;
                 
-                mkdir('../data/label');
-                imwrite(Iouttmp,fullfile('../data/label/',[fld_name '.tif']),'WriteMode','overwrite','Compression','none');
-                
+                mkdir('../data/output_label');
+                imwrite(Iouttmp,fullfile('../data/output_label/',[fld_name '.tif']),'WriteMode','overwrite','Compression','none');
+                export_csv(xy_select,xy_idx,xy_pos);
                 refreshed();
             % Close figure
                 if nargin==0
@@ -324,11 +324,9 @@ function MAIN_manual_correction(raw_image)
                 end
     end
     %% Export remapped label
-    function export_label_remapped(msg)
+    function export_label_realigned(msg)
         % Label realigned mask
                 [I_facet_auto,I_border_auto]=get_label(xy_select,offset,xy_idx_aligned,xy_pos_aligned);
-                I_label_auto = uint8(I_facet_auto);
-                I_label_auto(I_border_auto)=2;
                 I_facet_auto_ = I_facet_auto;
                 I_border_auto_ = I_border_auto;
             % Make huge non-eye layer (not used for now)
@@ -336,11 +334,12 @@ function MAIN_manual_correction(raw_image)
             
             % Export omatidia's borders and facets
                 % Export for weka classifier
-                mkdir('../data/label');
+                mkdir('../data/output_label');
                 Iouttmp = uint8(I_facet_auto_<0)+2;
                 Iouttmp(I_facet_auto_)=0;
                 Iouttmp(I_border_auto_)=1;
-                imwrite(Iouttmp,fullfile('../data/label/',[fld_name '.tif']),'WriteMode','overwrite','Compression','none');
+                imwrite(Iouttmp,fullfile('../data/output_label/',[fld_name '.tif']),'WriteMode','overwrite','Compression','none');
+                export_csv(xy_select,xy_idx_aligned,xy_pos_aligned);
                 % Save to training folder if needed
                 answer = questdlg('Save the aligned label and raw image to the training folder?','Next step','Yes','No','No');
                 if strcmp(answer,'Yes')
@@ -374,7 +373,7 @@ function MAIN_manual_correction(raw_image)
             answer = questdlg('Proceed with remapping and generating new aligned label?','Next step','Yes','No','Cancel','Cancel');
             if strcmp(answer,'Yes')
                 remap_coordinate_after_alignment;
-                export_label_remapped;
+                export_label_realigned;
             end
     end
     %% Remap everything:
@@ -387,6 +386,12 @@ function MAIN_manual_correction(raw_image)
             [xy_idx_aligned_,~] = remap_coordinate(xy_pos_aligned(idselect,:),xy_idx(1:3,:),size(I),grid_size);
             xy_idx_aligned = xy_idx*0;
             xy_idx_aligned(idselect,:)=xy_idx_aligned_;
+    end
+    function [] = export_csv(xy_select,xy_pos,xy_idx)
+        idselect = find((xy_select==1)|((xy_select<crr_deletelevel)));
+        datamat = [xy_pos(idselect,:) xy_idx(idselect,:)];
+        mkdir('../data/output_csv');
+        dlmwrite(fullfile('../data/output_csv',[fld_name '.csv']),datamat,'\t');
     end
     %% set hotkey:
     function keypress(~, eventdata, ~)
