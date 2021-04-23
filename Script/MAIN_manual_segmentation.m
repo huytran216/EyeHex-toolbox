@@ -27,7 +27,8 @@ function MAIN_manual_segmentation(raw_image)
     crr_addlevel = 1;
     first_refreshed = true;
     %% Load raw image and probability image
-    I = imread(['../data/raw/' raw_image]); % Uint8
+    I_ori = imread(['../data/raw/' raw_image]); % Uint8
+    I = I_ori;
     if size(I,3)==1
         % Make color image
         I = cat(3,I,I,I);
@@ -266,7 +267,7 @@ function MAIN_manual_segmentation(raw_image)
             % Export omatidia's borders and facets
                 % Export for weka classifier
                 mkdir('../data/training_raw');
-                imwrite(I,fullfile('../data/training_raw/',[fld_name '.tif']),'WriteMode','overwrite','Compression','none');
+                imwrite(I_ori,fullfile('../data/training_raw/',[fld_name '.tif']),'WriteMode','overwrite','Compression','none');
                 Iouttmp = uint8(I_facet_tmp<0)+2;
                 Iouttmp(I_facet_tmp)=0;
                 Iouttmp(I_border_tmp)=1;

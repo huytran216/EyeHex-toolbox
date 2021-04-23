@@ -14,11 +14,22 @@ I_sub = I;
 %% Load background - eye inside/outside region
 if exist(['../data/probability_map/' img_name '_inout.tif'],'file')
     I_bg =imread(['../data/probability_map/' img_name '_inout.tif']);
+    I_bg = imfilter(I_bg,fspecial('gaussian',5));
     I_bg = I_bg<graythresh(I_bg);
 else
     I_bg = I*0+1;
 end
-I_bg = ~imfill(~I_bg,8,'holes');
+I_bg = ~imfill(~I_bg,4,'holes');
+% Get biggest region
+CC = bwconncomp(~I_bg);
+for i=1:CC.NumObjects
+    size_patch(i) = numel(CC.PixelIdxList{i});
+end
+[~,biggest] = max(size_patch);
+I_bg = I_bg*0;
+I_bg(CC.PixelIdxList{biggest})=1;
+I_bg = ~I_bg;
+
 I_bg = double(I_bg);
 %% Show image:
 hmain = figure;
