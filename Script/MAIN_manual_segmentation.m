@@ -1,4 +1,11 @@
 function MAIN_manual_segmentation(raw_image)
+    %% If no file entered then load:
+    if ~exist('raw_image','var')
+        raw_image=uigetfile('../data/raw/*.tif','Select the image(s) to process','MultiSelect','off');
+    end
+    if ~raw_image
+        return;
+    end
     %% Load image and Setup global variables
     [~,fld_name] = fileparts(raw_image);
     % Set empty data shells

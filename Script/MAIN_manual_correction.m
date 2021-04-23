@@ -1,4 +1,11 @@
 function MAIN_manual_correction(raw_image)
+    %% If no file entered then load:
+    if ~exist('raw_image','var')
+        raw_image=uigetfile('../data/raw/*.tif','Select the image(s) to process','MultiSelect','off');
+    end
+    if ~raw_image
+        return;
+    end
     %% Setup global variables:
     [~,fld_name] = fileparts(raw_image);
     listing = dir(fullfile('tmp',fld_name,['dat_probmap*.mat']));
