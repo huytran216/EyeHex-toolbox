@@ -137,7 +137,7 @@ function MAIN_manual_correction(raw_image)
         end
         % Find file in raw_stack folder:
         listing_tmp = dir(fullfile('../data/raw_stack',[fld_name '_*.tif']));
-        if numel(listing)
+        if numel(listing_tmp)
             for i=1:numel(listing_tmp)
                 if strcmp(listing_tmp(i).name,alt_name)
                     break;
@@ -255,9 +255,8 @@ function MAIN_manual_correction(raw_image)
         I_facet_manual=I_facet_manual>0;
     end
     %% Get label from parameters
-    function [I_facet_auto,I_border_auto]=get_label(xy_select,offset,xy_idx,xy_pos)
+    function [I_facet_auto,I_border_auto]=get_label(idselect,offset,xy_idx,xy_pos)
         % Select automatically added mask
-        idselect = find((xy_select==1)|((xy_select<crr_deletelevel)));
         totalstep  = 10;
         crrstep = 1;
         f = waitbar(crrstep/totalstep,'Exporting mask');
@@ -282,7 +281,6 @@ function MAIN_manual_correction(raw_image)
                                 xy_pos(i,2) xy_pos(parent_i(j,1),2) xy_pos(parent_i(j,2),2) 1];
                         [~,~,~,I_out_facet,I_out_edge] = transform_I([x0 y0],xy,I_circle,size(I_facet_auto),I_edge);
                         I_facet_auto = I_facet_auto + (I_out_facet>maxIcircle*0.7);
-                        I_score_auto = I_score_auto + (I_out_facet>maxIcircle*0.7)*score(i);
                         I_border_auto = I_border_auto + (I_out_edge>maxIcircle*0.7);
                     end
                 end
@@ -306,12 +304,13 @@ function MAIN_manual_correction(raw_image)
         drawnow;
         % Make manual mask
         get_manual_mask;
-        % Remap first:
+        % Remap first, from automated one only
         idselect = find((xy_select>0)|(xy_select<crr_deletelevel));
         [xy_idx_,~] = remap_coordinate(xy_pos(idselect,:),xy_idx(1:3,:),size(I),grid_size);
         xy_idx(idselect,:)=xy_idx_;
-        % Create label:        
-        [I_facet_auto,I_border_auto]=get_label(xy_select,offset,xy_idx,xy_pos);
+        % Create label:
+        idselect = find((xy_select==1)|(xy_select<crr_deletelevel));
+        [I_facet_auto,I_border_auto]=get_label(idselect,offset,xy_idx,xy_pos);
         
             % Write omatidia's borders and facets
                 I_label_auto = uint8(I_facet_auto);
@@ -332,8 +331,9 @@ function MAIN_manual_correction(raw_image)
     end
     %% Export remapped label
     function export_label_realigned(msg)
+        idselect = find((xy_select>0)|(xy_select<crr_deletelevel));
         % Label realigned mask
-                [I_facet_auto,I_border_auto]=get_label(xy_select,offset,xy_idx_aligned,xy_pos_aligned);
+                [I_facet_auto,I_border_auto]=get_label(idselect,offset,xy_idx_aligned,xy_pos_aligned);
                 I_facet_auto_ = I_facet_auto;
                 I_border_auto_ = I_border_auto;
             % Make huge non-eye layer (not used for now)
