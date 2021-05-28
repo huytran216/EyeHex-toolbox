@@ -266,9 +266,15 @@ function MAIN_manual_correction(raw_image)
             I_score_auto = zeros(size(I,1),size(I,2));
             xymap = zeros(offset*2, offset*2);
             for i=1:size(xy_idx,1)
-                xymap(offset+xy_idx(i,1),offset+xy_idx(i,2))=i;
+                if ~isnan(xy_idx(i,1))
+                    xymap(offset+xy_idx(i,1),offset+xy_idx(i,2))=i;
+                end
             end
             for i=idselect(:)'
+                if isnan(xy_idx(i,1))
+                    display(['Skip: ' num2str(i)]);
+                    continue;
+                end
                 parent_i = [xymap(offset+xy_idx(i,1)+1,offset+xy_idx(i,2)) ...
                     xymap(offset+xy_idx(i,1),offset+xy_idx(i,2)+1); ...
                     xymap(offset+xy_idx(i,1)-1,offset+xy_idx(i,2)) ...
@@ -377,7 +383,8 @@ function MAIN_manual_correction(raw_image)
             idselect = find((xy_select==2));
             xy_pos_aligned(idselect,:) = xy_pos(idselect,:);
         % Remap everything after alignment (automatic + manual)
-            answer = questdlg('Proceed with remapping and generating new aligned label?','Next step','Yes','No','Cancel','Cancel');
+            %answer = questdlg('Proceed with remapping and generating new aligned label?','Next step','Yes','No','Cancel','Cancel');
+            answer = 'Yes';
             if strcmp(answer,'Yes')
                 remap_coordinate_after_alignment;
                 export_label_realigned;
@@ -395,7 +402,7 @@ function MAIN_manual_correction(raw_image)
             xy_idx_aligned(idselect,:)=xy_idx_aligned_;
     end
     function [] = export_csv(xy_select,xy_pos,xy_idx)
-        idselect = find((xy_select==1)|((xy_select<crr_deletelevel)));
+        idselect = find((xy_select>0)|((xy_select<crr_deletelevel)));
         datamat = [xy_pos(idselect,:) xy_idx(idselect,:)];
         mkdir('../data/output_csv');
         dlmwrite(fullfile('../data/output_csv',[fld_name '.csv']),datamat,'\t');

@@ -58,16 +58,18 @@ function [xy_idx_new,parent_idx_new] = remap_coordinate(xy_pos_stock,xy_idx,size
                                            xy_idx_opposite = xy_idx(idx_remain(1),:)+xy_idx(idx_remain(2),:)-xy_idx(idx_test(idx),:);
                                            % Check if this item has been tested:
                                            if sum(xy_idx(:, 1) == xy_idx_opposite(1) & xy_idx(:, 2) == xy_idx_opposite(2) )==0
-                                               xy_pos_opposite = xy_pos(idx_remain(1),:)+xy_pos(idx_remain(2),:)-xy_pos(idx_test(idx),:);
+                                               projection_length = 0.8;
+                                               xy_pos_center = (xy_pos(idx_remain(1),:)+xy_pos(idx_remain(2),:))/2;
+                                               xy_pos_opposite = xy_pos_center + projection_length*(xy_pos_center - xy_pos(idx_test(idx),:));
                                                % if picture is not at the border
                                                if (round(xy_pos_opposite(1))>0)&(round(xy_pos_opposite(1))<sizeI(1))&...
                                                        (round(xy_pos_opposite(2))>0)&(round(xy_pos_opposite(2))<sizeI(2))
                                                        xy0 = [xy_pos(idx_remain(1),1) xy_pos(idx_remain(2),1) xy_pos_opposite(1) ...
                                                            xy_pos(idx_remain(1),2) xy_pos(idx_remain(2),2) xy_pos_opposite(2)];
-                                                       xy0_lb = xy0-[grid_size/5 grid_size/5 grid_size/1.5 ...
-                                                           grid_size/5 grid_size/5 grid_size/1.5];
-                                                       xy0_ub = xy0+[grid_size/5 grid_size/5 grid_size/1.5 ...
-                                                           grid_size/5 grid_size/5 grid_size/1.5];
+                                                       xy0_lb = xy0-[grid_size/5 grid_size/5 grid_size/1.2 ...
+                                                           grid_size/5 grid_size/5 grid_size/1.2];
+                                                       xy0_ub = xy0+[grid_size/5 grid_size/5 grid_size/1.2 ...
+                                                           grid_size/5 grid_size/5 grid_size/1.2];
                                                        % save to test list:
                                                        cnttest= cnttest+1;
                                                        xy_to_test(cnttest).xy0=xy0;
@@ -170,8 +172,8 @@ function [xy_idx_new,parent_idx_new] = remap_coordinate(xy_pos_stock,xy_idx,size
         end
     end
     %% Plot results:
-    xy_idx_new = xy_pos_stock*0;
-    parent_idx_new = xy_pos_stock*0;
+    xy_idx_new = xy_pos_stock*NaN;
+    parent_idx_new = xy_pos_stock*NaN;
     xy_idx_new(real_idx,:) = xy_idx;
     if numel(real_idx)>=4
         parent_idx_new(real_idx(4:end),:)=[real_idx(round(parent_idx(4:end,1)))' real_idx(round(parent_idx(4:end,2)))'];

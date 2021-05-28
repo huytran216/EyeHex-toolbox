@@ -27,6 +27,7 @@ function [newx,newy,newval,newImg,newImg_extra]=transform_I(xy0,xy1,I,sizeI1,I_e
     if ~exist('I_extra','var')
         I_extra = I;
     end
+    newxy_rec = [];
     for j=1:numel(I)
         if ~isnan(I(j))
             % Get position of pixel index i
@@ -44,9 +45,10 @@ function [newx,newy,newval,newImg,newImg_extra]=transform_I(xy0,xy1,I,sizeI1,I_e
                 newval(i) = I(j);
                 newval_extra(i) = I_extra(j);
             end
+            newxy_rec = [newxy_rec; newxy(:)'];
         end
     end
-
+    
     if nargout>=4
         newImg=zeros(sizeI1);
         newImg_extra=zeros(sizeI1);
@@ -54,6 +56,5 @@ function [newx,newy,newval,newImg,newImg_extra]=transform_I(xy0,xy1,I,sizeI1,I_e
             newImg(newx(i),newy(i))=newval(i);
             newImg_extra(newx(i),newy(i))=newval_extra(i);
         end
-        %imshow(newImg);
     end
 end
