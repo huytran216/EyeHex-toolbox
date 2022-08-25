@@ -1,7 +1,7 @@
 # EyeHex-toolbox
 By Huy Tran and Ariane Ramaekers  
-Faculty of Medical and Heath Technology, Tampere University, Finland
-Flyteam, Laboratory of Nuclear Dynamics, UMR3664, Institut Curie, France
+Faculty of Medical and Heath Technology, Tampere University, Finland  
+Flyteam, Laboratory of Nuclear Dynamics, UMR3664, Institut Curie, France  
 Corresponding email: huy.tran@tuni.fi  
 
 ## Introduction
