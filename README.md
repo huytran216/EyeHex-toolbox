@@ -1,7 +1,8 @@
 # EyeHex-toolbox
 By Huy Tran and Ariane Ramaekers  
-Flyteam, Laboratory of Nuclear Dynamics, UMR3664, Institut Curie  
-Corresponding email: huy.tran@curie.fr  
+Faculty of Medical and Heath Technology, Tampere University, Finland
+Flyteam, Laboratory of Nuclear Dynamics, UMR3664, Institut Curie, France
+Corresponding email: huy.tran@tuni.fi  
 
 ## Introduction
 EyeHex is a MATLAB toolbox for ommatidia segmentation from 2D images of Drosophila eyes. The toolbox contains multiple Graphical User Interfaces allowing users to perform:
