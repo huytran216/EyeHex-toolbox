@@ -303,7 +303,8 @@ function MAIN_manual_segmentation(raw_image)
              + sqrt(sum((xy_pos(idselect(3),:) - xy_pos(idselect(1),:)).^2)) ...
              + sqrt(sum((xy_pos(idselect(3),:) - xy_pos(idselect(2),:)).^2)))/6;
             [xy_idx_new,~] = remap_coordinate(xy_pos(idselect,:),xy_idx(idselect(1:3),:),size(I),grid_size_);
-            xy_idx(idselect,:) = xy_idx_new;
+            idselect = idselect(~isnan(xy_idx_new(:,1)));
+            xy_idx(idselect,:) = xy_idx_new(~isnan(xy_idx_new(:,1)),:);
         % Create label:
             [I_facet_tmp,I_border_tmp] = get_label(xy_select(idselect),offset,xy_idx(idselect,:),xy_pos(idselect,:));
             I_facet_auto(I_facet_tmp)=crr_patch_idx;

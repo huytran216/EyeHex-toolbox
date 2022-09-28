@@ -4,7 +4,7 @@
 
 %% Open the file:
 fn=uigetfile('../data/raw/*.tif','Select the image(s) to process','MultiSelect','on');
-if ~fn
+if ~numel(fn)
     return;
 end
 %% Select hexagonal grid to expand:
