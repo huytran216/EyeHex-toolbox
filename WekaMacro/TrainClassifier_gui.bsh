@@ -5,6 +5,7 @@ inputLabelDir = new File(inputDir + "/training_label");
 inputTestDir = new File(inputDir + "/raw");
 outputTestDir = new File(inputDir + "/probability_map");
 
+		
 import trainableSegmentation.*;
 import ij.IJ;
 import trainableSegmentation.utils.Utils;
@@ -72,8 +73,20 @@ startTime = System.currentTimeMillis();
 	listOfFiles = inputTestDir.listFiles();
 	for ( i = 0; i < listOfFiles.length; i++ )
 	{
+		ToProcess = true;
+		filename = FilenameUtils.getBaseName(listOfFiles[ i ].getAbsolutePath());
+		processedTestDir = new File(inputDir + "/tmp/" + filename);
+		if (processedTestDir.exists())
+		{
+			listOfProcessedFiles = processedTestDir.listFiles();
+			if (listOfProcessedFiles.length > 2)
+			{
+				ToProcess = false;
+			}
+		}
+		IJ.log(filename + ": to process? " + ToProcess);
 	    // process only files (do not go into sub-folders)
-	    if( listOfFiles[ i ].isFile() )
+	    if (( listOfFiles[ i ].isFile() ) && (ToProcess))
 	    {
 	        // try to read file as image
 	        image = IJ.openImage( listOfFiles[i].getCanonicalPath() );
@@ -147,8 +160,20 @@ startTime = System.currentTimeMillis();
 	listOfFiles = inputTestDir.listFiles();
 	for ( i = 0; i < listOfFiles.length; i++ )
 	{
+		ToProcess = true;
+		filename = FilenameUtils.getBaseName(listOfFiles[ i ].getAbsolutePath());
+		processedTestDir = new File(inputDir + "/tmp/" + filename);
+		if (processedTestDir.exists())
+		{
+			listOfProcessedFiles = processedTestDir.listFiles();
+			if (listOfProcessedFiles.length > 2)
+			{
+				ToProcess = false;
+			}
+		}
+		IJ.log(filename + ": to process? " + ToProcess);
 	    // process only files (do not go into sub-folders)
-	    if( listOfFiles[ i ].isFile() )
+	    if (( listOfFiles[ i ].isFile() ) && (ToProcess))
 	    {
 	        // try to read file as image
 	        image = IJ.openImage( listOfFiles[i].getCanonicalPath() );
