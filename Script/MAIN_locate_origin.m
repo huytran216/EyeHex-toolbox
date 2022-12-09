@@ -9,7 +9,8 @@ I=imread(['../data/probability_map/' img_name '.tif'],1);
 if strcmp(class(I),'uint8')
     I = double(I)/255;
 end
-foldername =['tmp/' img_name];
+foldername =['../data/tmp/' img_name];
+mkdir(foldername);
 I_sub = I;
 %% Load background - eye inside/outside region
 if exist(['../data/probability_map/' img_name '_inout.tif'],'file')

@@ -1,6 +1,6 @@
 function expand_hexagon(img_name)
     [~,img_name] = fileparts(img_name);
-    foldername =['tmp/' img_name];
+    foldername =['../data/tmp/' img_name];
     %% Load data:
     datamat = load([foldername  '/original_pos.mat']);
     I_sub = datamat.I_sub;

@@ -8,7 +8,8 @@ function MAIN_manual_correction(raw_image)
     end
     %% Setup global variables:
     [~,fld_name] = fileparts(raw_image);
-    listing = dir(fullfile('tmp',fld_name,['dat_probmap*.mat']));
+    datafolder = '../data/tmp';
+    listing = dir(fullfile(datafolder,fld_name,['dat_probmap*.mat']));
     dat_probmap_list = [];
     for fidx = 1:numel(listing)
         if numel(listing(fidx).name>0)
@@ -101,7 +102,7 @@ function MAIN_manual_correction(raw_image)
         % Load the latest data:
         if numel(dat_probmap_list)
             fload = dat_probmap_list(end-latest_minus);
-            datfile = load(fullfile('tmp',fld_name,['dat_probmap' num2str(fload)]),'xy_pos','grid_size','xy_idx','parent_idx','score','xymap');
+            datfile = load(fullfile(datafolder,fld_name,['dat_probmap' num2str(fload)]),'xy_pos','grid_size','xy_idx','parent_idx','score','xymap');
         else
             msgbox('No data found. Do hexagon expansion first');
         end
@@ -368,7 +369,7 @@ function MAIN_manual_correction(raw_image)
         if ~numel(I_facet_auto)
             export_label('align');
         end
-        datapts_location = fullfile('tmp',fld_name,'aligned_pts.mat');
+        datapts_location = fullfile(datafolder,fld_name,'aligned_pts.mat');
         
         if exist(datapts_location,'file')
             load(datapts_location,'datapts');
@@ -441,16 +442,16 @@ function MAIN_manual_correction(raw_image)
             case 'h'
                 % save progress
                 if strcmp(eventdata.Modifier,'control')
-                    if exist(fullfile('tmp',fld_name,'saveprogress.mat'),'file')
+                    if exist(fullfile(datafolder,fld_name,'saveprogress.mat'),'file')
                         if strcmp(questdlg('Overwrite progress?','Overwrite','Yes','No','No'),'Yes')
-                            mkdir(fullfile('tmp',fld_name));
-                            save(fullfile('tmp',fld_name,'saveprogress.mat'),'xy_pos','xy_select','crr_deletelevel');
+                            mkdir(fullfile(datafolder,fld_name));
+                            save(fullfile(datafolder,fld_name,'saveprogress.mat'),'xy_pos','xy_select','crr_deletelevel');
                             refreshed();
                             msgbox('Save successfully');
                         end
                     else
-                        mkdir(fullfile('tmp',fld_name));
-                        save(fullfile('tmp',fld_name,'saveprogress.mat'),'xy_pos','xy_select','crr_deletelevel');
+                        mkdir(fullfile(datafolder,fld_name));
+                        save(fullfile(datafolder,fld_name,'saveprogress.mat'),'xy_pos','xy_select','crr_deletelevel');
                         refreshed();
                         msgbox('Save successfully');
                     end
@@ -459,7 +460,7 @@ function MAIN_manual_correction(raw_image)
                 % load progress
                 try
                     if strcmp(eventdata.Modifier,'control')
-                        load(fullfile('tmp',fld_name,'saveprogress.mat'),'xy_pos','xy_select','crr_deletelevel');
+                        load(fullfile(datafolder,fld_name,'saveprogress.mat'),'xy_pos','xy_select','crr_deletelevel');
                         refreshed();
                     end
                 catch
@@ -554,8 +555,8 @@ function MAIN_manual_correction(raw_image)
         end
         switch answer
             case 'Yes'
-                mkdir(fullfile('tmp',fld_name));
-                save(fullfile('tmp',fld_name,'saveprogress.mat'),'xy_pos','xy_select','crr_deletelevel');
+                mkdir(fullfile(datafolder,fld_name));
+                save(fullfile(datafolder,fld_name,'saveprogress.mat'),'xy_pos','xy_select','crr_deletelevel');
                 refreshed();
                 delete(gcf);
             case 'No'

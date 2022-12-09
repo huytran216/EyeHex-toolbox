@@ -8,6 +8,7 @@ function MAIN_manual_segmentation(raw_image)
     end
     %% Load image and Setup global variables
     [~,fld_name] = fileparts(raw_image);
+    datafolder = '../data/tmp';
     % Set empty data shells
     xy_pos = [];
     I_sub = [];
@@ -133,7 +134,7 @@ function MAIN_manual_segmentation(raw_image)
                 if valid_patch_idx(i)
                     scatter(xy_pos(idselect,2),xy_pos(idselect,1),120,'Marker','o','MarkerEdgeColor','r','MarkerFaceColor',color,'Parent',axmain); hold on;
                 else
-                    scatter(xy_pos(idselect,2),xy_pos(idselect,1),100,'Marker','.','MarkerEdgeColor','r','MarkerFaceColor',color,'Parent',axmain); hold on;
+                    %scatter(xy_pos(idselect,2),xy_pos(idselect,1),100,'Marker','.','MarkerEdgeColor','r','MarkerFaceColor',color,'Parent',axmain); hold on;
                 end
             end
         end
@@ -312,8 +313,8 @@ function MAIN_manual_segmentation(raw_image)
     end
     %% Save progress:
     function save_progress()
-        mkdir('tmp',fld_name);
-        save(fullfile('tmp',fld_name,'saveprogress_manual.mat'),...
+        mkdir('../data/tmp',fld_name);
+        save(fullfile('../data/tmp',fld_name,'saveprogress_manual.mat'),...
             'xy_pos','xy_select',...
             'map_patch_idx','crr_patch_idx','valid_patch_idx',...
             'I_inout',...
@@ -354,7 +355,7 @@ function MAIN_manual_segmentation(raw_image)
                 % load progress
                 try
                     if strcmp(eventdata.Modifier,'control')
-                        load(fullfile('tmp',fld_name,'saveprogress_manual.mat'),...
+                        load(fullfile('../data/tmp',fld_name,'saveprogress_manual.mat'),...
                             'xy_pos','xy_select',...
                             'map_patch_idx','crr_patch_idx','valid_patch_idx',...
                             'crr_inout_idx','valid_inout_idx','I_inout',...
