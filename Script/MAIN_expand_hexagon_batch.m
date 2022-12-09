@@ -3,7 +3,7 @@
 % then perform hexagonal grid expansion on all these images
 
 %% Open the file:
-fn=uigetfile('../data/raw/*.tif','Select the image(s) to process','MultiSelect','on');
+[fn,path_name]=uigetfile('../data/raw/*.tif','Select the image(s) to process','MultiSelect','on');
 if ~numel(fn)
     return;
 end
@@ -35,6 +35,6 @@ end
 %% Perform automatic spawn:
 for i=1:numel(fn)
     if valid_expansion(i)
-        expand_hexagon(fn{i});
+        expand_hexagon(fn{i},path_name);
     end
 end

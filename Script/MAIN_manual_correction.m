@@ -1,14 +1,21 @@
 function MAIN_manual_correction(raw_image)
     %% If no file entered then load:
     if ~exist('raw_image','var')
-        raw_image=uigetfile('../data/raw/*.tif','Select the image(s) to process','MultiSelect','off');
+        [raw_image,path_name]=uigetfile('../data/raw/*.tif','Select the image(s) to process','MultiSelect','off');
     end
     if ~raw_image
         return;
     end
     %% Setup global variables:
     [~,fld_name] = fileparts(raw_image);
-    datafolder = '../data/tmp';
+    datafolder = fullfile(path_name,'../tmp');
+    probfolder = fullfile(path_name,'../probability_map');
+    stackfolder = fullfile(path_name,'../raw_stack');
+    labelfolder = fullfile(path_name,'../output_label');
+    traininglabelfolder = fullfile(path_name,'../training_label');
+    trainingrawfolder = fullfile(path_name,'../raw_label');
+    csvfolder = fullfile(path_name,'../output_csv');
+
     listing = dir(fullfile(datafolder,fld_name,['dat_probmap*.mat']));
     dat_probmap_list = [];
     for fidx = 1:numel(listing)
@@ -42,9 +49,9 @@ function MAIN_manual_correction(raw_image)
     %% Load the latest data:
     load_data();    
     %% Load raw image and probability image
-    I = imread(['../data/raw/' raw_image]); % Uint8
+    I = imread(fullfile(path_name,raw_image)); % Uint8
     I_alt = I; alt_name = ''; show_alt = false;
-    I_probs = imread(['../data/probability_map/' raw_image]);
+    I_probs = imread(fullfile(probfolder,raw_image));
     I = imresize(I,size(I_probs));
     fmain=figure('Visible','on');
     axmain = gca;
@@ -137,7 +144,7 @@ function MAIN_manual_correction(raw_image)
             return;
         end
         % Find file in raw_stack folder:
-        listing_tmp = dir(fullfile('../data/raw_stack',[fld_name '_*.tif']));
+        listing_tmp = dir(fullfile(stackfolder,[fld_name '_*.tif']));
         if numel(listing_tmp)
             for i=1:numel(listing_tmp)
                 if strcmp(listing_tmp(i).name,alt_name)
@@ -152,7 +159,7 @@ function MAIN_manual_correction(raw_image)
                 i = 1;
             end
             alt_name = listing_tmp(i).name;
-            I_alt = imread(fullfile('../data/raw_stack/',alt_name));
+            I_alt = imread(fullfile(stackfolder,alt_name));
         end
     end
     %% Show the data:
@@ -327,8 +334,8 @@ function MAIN_manual_correction(raw_image)
                 Iouttmp(I_facet_auto)=0;
                 Iouttmp(I_border_auto)=1;
                 
-                mkdir('../data/output_label');
-                imwrite(Iouttmp,fullfile('../data/output_label/',[fld_name '.tif']),'WriteMode','overwrite','Compression','none');
+                mkdir(labelfolder);
+                imwrite(Iouttmp,fullfile(labelfolder,[fld_name '.tif']),'WriteMode','overwrite','Compression','none');
                 export_csv(xy_select,xy_idx,xy_pos);
                 refreshed();
             % Close figure
@@ -348,19 +355,19 @@ function MAIN_manual_correction(raw_image)
             
             % Export omatidia's borders and facets
                 % Export for weka classifier
-                mkdir('../data/output_label');
+                mkdir(labelfolder);
                 Iouttmp = uint8(I_facet_auto_<0)+2;
                 Iouttmp(I_facet_auto_)=0;
                 Iouttmp(I_border_auto_)=1;
-                imwrite(Iouttmp,fullfile('../data/output_label/',[fld_name '.tif']),'WriteMode','overwrite','Compression','none');
+                imwrite(Iouttmp,fullfile(labelfolder,[fld_name '.tif']),'WriteMode','overwrite','Compression','none');
                 export_csv(xy_select,xy_idx_aligned,xy_pos_aligned);
                 % Save to training folder if needed
                 answer = questdlg('Save the aligned label and raw image to the training folder?','Next step','Yes','No','No');
                 if strcmp(answer,'Yes')
-                    mkdir('../data/training_label');
-                    imwrite(Iouttmp,fullfile('../data/training_label/',[fld_name '.tif']),'WriteMode','overwrite','Compression','none');
-                    mkdir('../data/training_raw');
-                    imwrite(I,fullfile('../data/training_raw/',[fld_name '.tif']),'WriteMode','overwrite','Compression','none');
+                    mkdir(traininglabelfolder);
+                    imwrite(Iouttmp,fullfile(traininglabelfolder,[fld_name '.tif']),'WriteMode','overwrite','Compression','none');
+                    mkdir(trainingrawfolder);
+                    imwrite(I,fullfile(trainingrawfolder,[fld_name '.tif']),'WriteMode','overwrite','Compression','none');
                 end
                 refreshed();
     end
@@ -405,8 +412,8 @@ function MAIN_manual_correction(raw_image)
     function [] = export_csv(xy_select,xy_pos,xy_idx)
         idselect = find((xy_select>0)|((xy_select<crr_deletelevel)));
         datamat = [xy_pos(idselect,:) xy_idx(idselect,:)];
-        mkdir('../data/output_csv');
-        dlmwrite(fullfile('../data/output_csv',[fld_name '.csv']),datamat,'\t');
+        mkdir(csvfolder);
+        dlmwrite(fullfile(csvfolder,[fld_name '.csv']),datamat,'\t');
     end
     %% set hotkey:
     function keypress(~, eventdata, ~)

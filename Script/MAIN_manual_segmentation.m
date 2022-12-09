@@ -1,14 +1,17 @@
 function MAIN_manual_segmentation(raw_image)
     %% If no file entered then load:
     if ~exist('raw_image','var')
-        raw_image=uigetfile('../data/raw/*.tif','Select the image(s) to process','MultiSelect','off');
+        [raw_image,path_name]=uigetfile('../data/raw/*.tif','Select the image(s) to process','MultiSelect','off');
     end
     if ~raw_image
         return;
     end
     %% Load image and Setup global variables
     [~,fld_name] = fileparts(raw_image);
-    datafolder = '../data/tmp';
+    datafolder = fullfile(path_name, '../tmp');
+    labelfolder = fullfile(path_name,  '../training_label');
+    rawfolder = fullfile(path_name,  '../training_raw');
+
     % Set empty data shells
     xy_pos = [];
     I_sub = [];
@@ -35,7 +38,7 @@ function MAIN_manual_segmentation(raw_image)
     crr_addlevel = 1;
     first_refreshed = true;
     %% Load raw image and probability image
-    I_ori = imread(['../data/raw/' raw_image]); % Uint8
+    I_ori = imread(fullfile(path_name,raw_image)); % Uint8
     I = I_ori;
     if size(I,3)==1
         % Make color image
@@ -274,21 +277,21 @@ function MAIN_manual_segmentation(raw_image)
         
             % Export omatidia's borders and facets
                 % Export for weka classifier
-                mkdir('../data/training_raw');
-                imwrite(I_ori,fullfile('../data/training_raw/',[fld_name '.tif']),'WriteMode','overwrite','Compression','none');
+                mkdir(rawfolder);
+                imwrite(I_ori,fullfile(rawfolder,[fld_name '.tif']),'WriteMode','overwrite','Compression','none');
                 Iouttmp = uint8(I_facet_tmp<0)+2;
                 Iouttmp(I_facet_tmp)=0;
                 Iouttmp(I_border_tmp)=1;
-                mkdir('../data/training_label');
-                imwrite(Iouttmp,fullfile('../data/training_label/',[fld_name '.tif']),'WriteMode','overwrite','Compression','none');
+                mkdir(labelfolder);
+                imwrite(Iouttmp,fullfile(labelfolder,[fld_name '.tif']),'WriteMode','overwrite','Compression','none');
                 if any(I_inout(:)~=2)
-                    imwrite(uint8(I_inout),fullfile('../data/training_label/',[fld_name '_inout.tif']),'WriteMode','overwrite','Compression','none');
+                    imwrite(uint8(I_inout),fullfile(labelfolder,[fld_name '_inout.tif']),'WriteMode','overwrite','Compression','none');
                 end
             % Refresh screen:    
                 refreshed();
                 msgbox('Label exported');
             % Prepare probability_map folder
-                mkdir('../data/probability_map');
+                mkdir(fullfile(path_name,'../data/probability_map'));
     end
     %% Remap everything:
     function xy_idx_new = remap_coordinate_after_alignment(crr_patch_idx)
@@ -313,8 +316,8 @@ function MAIN_manual_segmentation(raw_image)
     end
     %% Save progress:
     function save_progress()
-        mkdir('../data/tmp',fld_name);
-        save(fullfile('../data/tmp',fld_name,'saveprogress_manual.mat'),...
+        mkdir(datafolder,fld_name);
+        save(fullfile(datafolder,fld_name,'saveprogress_manual.mat'),...
             'xy_pos','xy_select',...
             'map_patch_idx','crr_patch_idx','valid_patch_idx',...
             'I_inout',...
@@ -355,7 +358,7 @@ function MAIN_manual_segmentation(raw_image)
                 % load progress
                 try
                     if strcmp(eventdata.Modifier,'control')
-                        load(fullfile('../data/tmp',fld_name,'saveprogress_manual.mat'),...
+                        load(fullfile(datafolder,fld_name,'saveprogress_manual.mat'),...
                             'xy_pos','xy_select',...
                             'map_patch_idx','crr_patch_idx','valid_patch_idx',...
                             'crr_inout_idx','valid_inout_idx','I_inout',...
