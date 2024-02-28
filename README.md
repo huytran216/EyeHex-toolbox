@@ -26,7 +26,7 @@ Fiji toolbox (download from https://fiji.sc/)
 *Examples of the data/ folder structure, with two raw images. Image img1.tif is used here to generate training data. The ommatidia segmentation is then applied to img2.tif file.*  
 
 ## Preparing training data
-This step will help users generate training data for the machine learning module. It needs to done once whenever a new type of image (from e.g. electron microscope, brightfield microscope…) or a drastic change in microscopy settings is introduced.  
+This step will help users generate training data for the machine learning module. It needs to be done once whenever a new type of image (from e.g. electron microscope, brightfield microscope…) or a drastic change in microscopy settings is introduced.  
 
 Browse to `Script/` folder via MATLAB and type `MAIN_manual_segmentation(input_file)` in MATLAB command window to run the manual segmentation GUI. The `input_file` is the full name of the input image (e.g. `'img1.tif'`) in string format.  
 ```matlab
