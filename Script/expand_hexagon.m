@@ -3,7 +3,7 @@ function expand_hexagon(img_name,path_name)
         path_name = "../";
     end
     [~,img_name] = fileparts(img_name);
-    foldername =fullfile(path_name,'tmp',img_name);
+    foldername =fullfile(path_name,'../tmp',img_name);
     %% Load data:
     datamat = load([foldername  '/original_pos.mat']);
     I_sub = datamat.I_sub;

@@ -1,20 +1,20 @@
-function MAIN_locate_origin(img_name,automatic_expansion)
+function MAIN_locate_origin(img_name,automatic_expansion,path_name)
 %% perform automatic expansion if set_origin_only not specified
 if ~exist('automatic_expansion','var')
     automatic_expansion = false;
 end
 [~,img_name] = fileparts(img_name);
 %% Load image
-I=imread(['../data/probability_map/' img_name '.tif'],1);
+I=imread(fullfile(path_name,['../probability_map/' img_name '.tif']),1);
 if strcmp(class(I),'uint8')
     I = double(I)/255;
 end
-foldername =['../data/tmp/' img_name];
+foldername =fullfile(path_name,['../tmp/' img_name]);
 mkdir(foldername);
 I_sub = I;
 %% Load background - eye inside/outside region
-if exist(['../data/probability_map/' img_name '_inout.tif'],'file')
-    I_bg =imread(['../data/probability_map/' img_name '_inout.tif']);
+if exist(fullfile(path_name,['../probability_map/' img_name '_inout.tif']),'file')
+    I_bg =imread(fullfile(path_name,['../probability_map/' img_name '_inout.tif']));
     I_bg = imfilter(I_bg,fspecial('gaussian',5));
     I_bg = I_bg<graythresh(I_bg);
 else
@@ -23,6 +23,7 @@ end
 I_bg = ~imfill(~I_bg,4,'holes');
 % Get biggest region
 CC = bwconncomp(~I_bg);
+size_patch = [];
 for i=1:CC.NumObjects
     size_patch(i) = numel(CC.PixelIdxList{i});
 end

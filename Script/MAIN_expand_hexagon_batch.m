@@ -14,7 +14,7 @@ if ~iscell(fn)
 end
 for i=1:numel(fn)
     % Set location but don't expand right away
-    MAIN_locate_origin(fn{i},0);
+    MAIN_locate_origin(fn{i},0,path_name);
     go_next = false;
     while ~go_next
         answer = questdlg('Will you spawn the hexagonal grid with this origin?','Confirm','Yes','Redo','Skip','Redo');
