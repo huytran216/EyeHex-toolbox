@@ -25,6 +25,8 @@ Fiji toolbox (download from https://fiji.sc/)
 ![alt text](https://github.com/huytran216/EyeHex-toolbox/blob/main/Manual/Img/Path.png?raw=true)
 *Examples of the data/ folder structure, with two raw images. Image img1.tif is used here to generate training data. The ommatidia segmentation is then applied to img2.tif file.*  
 
+It is recommended that you backup and create a new empty `data/` folder for each dataset (e.g. new strains, or new developmental conditions).
+
 ## Preparing training data
 This step will help users generate training data for the machine learning module. It needs to be done once whenever a new type of image (from e.g. electron microscope, brightfield microscope…) or a drastic change in microscopy settings is introduced.  
 
@@ -70,7 +72,7 @@ Browse to `Script/` folder via MATLAB and type `MAIN_manual_correction(input_fil
     MAIN_manual_correction('img2.tif')
 ```
 From this GUI, you can add (press <kbd>A</kbd>) or remove (press <kbd>R</kbd>) ommatidia. You will focus mostly on the edges of the eye where errors might appear. You can save and load the correction progress by pressing <kbd>CTRL</kbd> + <kbd>H</kbd> (to save progress) and <kbd>CTRL</kbd> + <kbd>L</kbd> (to load progress).  
-Once done, press <kbd>CTRL</kbd> + <kbd>E</kbd> to export the image label to `data/label/` folder.
+Once done, press <kbd>CTRL</kbd> + <kbd>E</kbd> to export the full segmentation results. This includes *the image label*, containing the ommatidia masks to `data/label/` folder. Also exported is a *csv file* to `data/csv/` folder with information about each ommatidium's index, the x and y position of its center and its coordinate on the hexagonal axis.
 
 ![alt text](https://github.com/huytran216/EyeHex-toolbox/blob/main/Manual/Img/Manual_correction.png?raw=true)
 *Manual correction after automatic ommatidia detection: (A,C) raw image overlaid with automatic ommatidia segmentation. (B-D) manually corrected ommatidia segmentation. Panel C-D is a zoom-in region of panel A-B. In (A-D), automatically detected ommatidia are shown as green circles, manually added ommatidia are shown as red circles and manually removed ommatidia are shown as red dots. The example image (img2.tif) is taken from a brightfield microscope.*
