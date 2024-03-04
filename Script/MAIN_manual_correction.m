@@ -1,7 +1,7 @@
 function MAIN_manual_correction(raw_image)
     %% If no file entered then load:
     if ~exist('raw_image','var')
-        [raw_image,path_name]=uigetfile('../data/raw/*.tif','Select the image(s) to process','MultiSelect','off');
+        [raw_image,path_name]=uigetfile('../data/raw/*.tif','Select the raw image for manual correction','MultiSelect','off');
     end
     if ~raw_image
         return;
@@ -411,9 +411,13 @@ function MAIN_manual_correction(raw_image)
     end
     function [] = export_csv(xy_select,xy_pos,xy_idx)
         idselect = find((xy_select>0)|((xy_select<crr_deletelevel)));
-        datamat = [xy_pos(idselect,:) xy_idx(idselect,:)];
+        datamat = [(1:numel(idselect))' xy_pos(idselect,:) xy_idx(idselect,:)];
         mkdir(csvfolder);
-        dlmwrite(fullfile(csvfolder,[fld_name '.csv']),datamat,'\t');
+        csv_filename = fullfile(csvfolder,[fld_name '.csv']);
+        fid = fopen(csv_filename,'w');
+        fprintf(fid, '"Ommetidia_ID" "x_position" "y_position" "x_hex" "y_hex" \n');
+        fclose(fid);
+        dlmwrite(csv_filename,datamat,'delimiter','\t','-append');
     end
     %% set hotkey:
     function keypress(~, eventdata, ~)
