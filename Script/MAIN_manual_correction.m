@@ -409,7 +409,7 @@ function MAIN_manual_correction(raw_image)
             xy_idx_aligned = xy_idx*0;
             xy_idx_aligned(idselect,:)=xy_idx_aligned_;
     end
-    function [] = export_csv(xy_select,xy_pos,xy_idx)
+    function [] = export_csv(xy_select,xy_idx,xy_pos)
         idselect = find((xy_select>0)|((xy_select<crr_deletelevel)));
         datamat = [(1:numel(idselect))' xy_pos(idselect,:) xy_idx(idselect,:)];
         mkdir(csvfolder);
