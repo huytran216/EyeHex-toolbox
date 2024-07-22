@@ -13,7 +13,12 @@ foldername =fullfile(path_name,['../tmp/' img_name]);
 mkdir(foldername);
 I_sub = I;
 %% Load background - eye inside/outside region
-if exist(fullfile(path_name,['../probability_map/' img_name '_inout.tif']),'file')
+if exist(fullfile(path_name,['../raw_mask/' img_name '_inout.tif']),'file')
+    % Check if manual mask is created
+    I_bg =imread(fullfile(path_name,['../raw_mask/' img_name '.tif']));
+    I_bg = I_bg>0;
+elseif exist(fullfile(path_name,['../probability_map/' img_name '_inout.tif']),'file')
+    % Check to automatic mask is created
     I_bg =imread(fullfile(path_name,['../probability_map/' img_name '_inout.tif']));
     I_bg = imfilter(I_bg,fspecial('gaussian',5));
     I_bg = I_bg<graythresh(I_bg);
