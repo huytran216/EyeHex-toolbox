@@ -23,7 +23,7 @@ for i=1:numel(fn)
                 valid_expansion(i) = true;
                 go_next = true;
             case 'Redo'
-                MAIN_locate_origin(fn{i},0);
+                MAIN_locate_origin(fn{i},path_name);
                 go_next = false;
             case 'Skip'
                 valid_expansion(i) = false;

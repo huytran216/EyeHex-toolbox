@@ -13,29 +13,29 @@ foldername =fullfile(path_name,['../tmp/' img_name]);
 mkdir(foldername);
 I_sub = I;
 %% Load background - eye inside/outside region
-if exist(fullfile(path_name,['../raw_mask/' img_name '_inout.tif']),'file')
+if exist(fullfile(path_name,['../raw_mask/' img_name '.tif']),'file')
     % Check if manual mask is created
     I_bg =imread(fullfile(path_name,['../raw_mask/' img_name '.tif']));
-    I_bg = I_bg>0;
+    I_bg = I_bg==0;
 elseif exist(fullfile(path_name,['../probability_map/' img_name '_inout.tif']),'file')
     % Check to automatic mask is created
     I_bg =imread(fullfile(path_name,['../probability_map/' img_name '_inout.tif']));
     I_bg = imfilter(I_bg,fspecial('gaussian',5));
     I_bg = I_bg<graythresh(I_bg);
+    I_bg = ~imfill(~I_bg,4,'holes');
+    % Retain only biggest region
+    CC = bwconncomp(~I_bg);
+    size_patch = [];
+    for i=1:CC.NumObjects
+        size_patch(i) = numel(CC.PixelIdxList{i});
+    end
+    [~,biggest] = max(size_patch);
+    I_bg = I_bg*0;
+    I_bg(CC.PixelIdxList{biggest})=1;
+    I_bg = ~I_bg;
 else
-    I_bg = I*0+1;
+    I_bg = I*0;
 end
-I_bg = ~imfill(~I_bg,4,'holes');
-% Get biggest region
-CC = bwconncomp(~I_bg);
-size_patch = [];
-for i=1:CC.NumObjects
-    size_patch(i) = numel(CC.PixelIdxList{i});
-end
-[~,biggest] = max(size_patch);
-I_bg = I_bg*0;
-I_bg(CC.PixelIdxList{biggest})=1;
-I_bg = ~I_bg;
 
 I_bg = double(I_bg);
 %% Show image:
