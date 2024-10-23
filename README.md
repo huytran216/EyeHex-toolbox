@@ -1,6 +1,6 @@
 # EyeHex-toolbox
 By Huy Tran<sup>1</sup> and Ariane Ramaekers<sup>2</sup>  
-1. Faculty of Medical and Heath Technology, Tampere University, Finland  
+1. Faculty of Medicine and Heath Technology, Tampere University, Finland
 2. Flyteam, Laboratory of Nuclear Dynamics, UMR3664, Institut Curie, France  
 Corresponding email: huy.tran@tuni.fi  
 
@@ -72,12 +72,17 @@ Browse to `Script/` folder via MATLAB and type `MAIN_manual_correction(input_fil
     MAIN_manual_correction('img2.tif')
 ```
 From this GUI, you can add (press <kbd>A</kbd>) or remove (press <kbd>R</kbd>) ommatidia. You will focus mostly on the edges of the eye where errors might appear. You can save and load the correction progress by pressing <kbd>CTRL</kbd> + <kbd>H</kbd> (to save progress) and <kbd>CTRL</kbd> + <kbd>L</kbd> (to load progress).  
-Once done, press <kbd>CTRL</kbd> + <kbd>E</kbd> to export the full segmentation results. This includes *the image label*, containing the ommatidia masks to `data/label/` folder. Also exported is a *csv file* to `data/csv/` folder with information about each ommatidium's index, the x and y position of its center and its coordinate on the hexagonal axis.
+Once done, press <kbd>CTRL</kbd> + <kbd>E</kbd> to export the full segmentation results. This includes *the image label*, containing the ommatidia masks to `data/label/` folder. 
 
 ![alt text](https://github.com/huytran216/EyeHex-toolbox/blob/main/Manual/Img/Manual_correction.png?raw=true)
 *Manual correction after automatic ommatidia detection: (A,C) raw image overlaid with automatic ommatidia segmentation. (B-D) manually corrected ommatidia segmentation. Panel C-D is a zoom-in region of panel A-B. In (A-D), automatically detected ommatidia are shown as green circles, manually added ommatidia are shown as red circles and manually removed ommatidia are shown as red dots. The example image (img2.tif) is taken from a brightfield microscope.*
 
 You can press <kbd>F1</kbd> to access all the hotkeys (zoom in/out, save/load progress).
+
+## Exporting ommatidia's coordinates and order of birth
+
+Following the labeled image's export, a new figure showing the original compound eye will appear. To rearrange detected ommatidia by the birth order of their respective progenitors (R8 specification), using the mouse, select two points on the newly created figure to specify the direction from the posterior to the anterior of the eye. The order of ommatidia progenitors' birth will be calculated accordingly.
+Also exported is a *csv file* to `data/csv/` folder with information about each ommatidium's index, the x and y position of its centroid, its coordinate on the hexagonal grid and its order of birth.
 
 ## Label alignment
 As the hexagonal grid expansion is performed based on the probability map, rather than the raw image, there might be some small misalignments between the exported label image and the raw image. If you want to know the exact ommatidia position, to extract features from individual ommatidia or to create new training data, you can manually realign the label image to match the raw image.  
@@ -86,9 +91,12 @@ As the hexagonal grid expansion is performed based on the probability map, rathe
 1. Drag and drop the anchor points so that the boundary labels match with the boundary in the original image.
 1. Press <kbd>Enter</kbd>. The program will automatically generate the aligned label image and overwrite the current one in `data/label/` folder. You will also have an option to export it as training data for the machine learning module (similar to the first manual segmentation process).
 
-# License
+## Citing EyeHex:
+Tran, Dostatni & Ramaekers, EyeHex toolbox for complete segmentation of ommatidia in fruit fly eyes, BioRXiv, 2024
+
+## License
 See License.md  
-Copyright (C) 2021 Huy Tran
+Copyright (C) 2024 Huy Tran
 
 ## References
 [1] Arganda-Carreras, I.; Kaynig, V. & Rueden, C. et al. (2017), "Trainable Weka Segmentation: a machine learning tool for microscopy pixel classification.", Bioinformatics (Oxford Univ Press) 33 (15).  
