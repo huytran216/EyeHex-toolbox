@@ -4,7 +4,6 @@ function [I1aligned, data] = aligngui(Iin, I1vis, I2, data, title)
     % Ilvis: image for alignment
     % I2: original image
     % data: data points for alignment
-    % title: 
 % aligngui Image registration GUI
     %% If image color: >> make gray
     if numel(size(I2))==3

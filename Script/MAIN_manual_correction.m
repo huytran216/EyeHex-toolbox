@@ -50,13 +50,13 @@ function MAIN_manual_correction(raw_image)
         % Load the latest data:
         latest_minus = 0;
     %% Load the latest data:
-    load_data();    
+    load_data();
     %% Load raw image and probability image
     I = imread(fullfile(path_name,raw_image)); % Uint8
     I_alt = I; alt_name = ''; show_alt = false;
     I_probs = imread(fullfile(probfolder,raw_image));
     I = imresize(I,size(I_probs));
-    fmain=figure('Visible','on');
+    fmain=figure('Visible','on','Name',fld_name);
     axmain = gca;
     viewmode = 0;
     I_border_auto = [];  % Border generated automatically    
@@ -343,12 +343,7 @@ function MAIN_manual_correction(raw_image)
                 
                 mkdir(labelfolder);
                 imwrite(Iouttmp,fullfile(labelfolder,[fld_name '.tif']),'WriteMode','overwrite','Compression','none');
-                export_csv(xy_select,xy_idx,xy_pos);
                 refreshed();
-            % Close figure
-                if nargin==0
-                    msgbox('Successful');
-                end
     end
     %% Export remapped label
     function export_label_realigned(msg)
@@ -357,9 +352,6 @@ function MAIN_manual_correction(raw_image)
                 [I_facet_auto,I_border_auto]=get_label(idselect,offset,xy_idx_aligned,xy_pos_aligned);
                 I_facet_auto_ = I_facet_auto;
                 I_border_auto_ = I_border_auto;
-            % Make huge non-eye layer (not used for now)
-                %I_non_eye = ~conv2(double(I_facet_auto_ | I_border_auto_),ones(30,30),'same');
-            
             % Export omatidia's borders and facets
                 % Export for weka classifier
                 mkdir(labelfolder);
@@ -367,7 +359,7 @@ function MAIN_manual_correction(raw_image)
                 Iouttmp(I_facet_auto_)=0;
                 Iouttmp(I_border_auto_)=1;
                 imwrite(Iouttmp,fullfile(labelfolder,[fld_name '.tif']),'WriteMode','overwrite','Compression','none');
-                export_csv(xy_select,xy_idx_aligned,xy_pos_aligned);
+                
                 % Save to training folder if needed
                 answer = questdlg('Save the aligned label and raw image to the training folder?','Next step','Yes','No','No');
                 if strcmp(answer,'Yes')
@@ -403,7 +395,6 @@ function MAIN_manual_correction(raw_image)
             if strcmp(answer,'Yes')
                 remap_coordinate_after_alignment;
                 export_label_realigned;
-                get_profile();
             end
     end
     %% Remap everything:
@@ -417,36 +408,41 @@ function MAIN_manual_correction(raw_image)
             xy_idx_aligned = xy_idx*0;
             xy_idx_aligned(idselect,:)=xy_idx_aligned_;
     end
-    function [] = export_csv(xy_select,xy_idx,xy_pos)
+    function [] = export_csv(xy_idx,xy_pos)
         idselect = find((xy_select>0)|((xy_select<crr_deletelevel)));
-        datamat = [(1:numel(idselect))' xy_pos(idselect,:) xy_idx(idselect,:)];
+        datamat = [(1:numel(idselect))' xy_pos(idselect,:) xy_idx(idselect,:) nansum(xy_idx(idselect,:),2)];
+        
         mkdir(csvfolder);
         csv_filename = fullfile(csvfolder,[fld_name '.csv']);
         fid = fopen(csv_filename,'w');
-        fprintf(fid, '"Ommetidia_ID" "x_position" "y_position" "x_hex" "y_hex" \n');
+        fprintf(fid, 'Ommatidia_ID, x_position, y_position, x_hex, y_hex, col_index \n');
         fclose(fid);
-        dlmwrite(csv_filename,datamat,'delimiter','\t','-append');
+        dlmwrite(csv_filename,datamat,'delimiter',',','-append');
+        % Close figure
+        msgbox('Csv file and labeled image exported');
     end
     %% Get eye profile 
-    function [] = get_profile()
-        correct_postero_anterio_axis();
+    function [] = get_profile(xy_idx,xy_pos)
+        correct_postero_anterio_axis(xy_idx,xy_pos);
     end
     %% Get orientation:
-    function [] = correct_postero_anterio_axis()
+    function [] = correct_postero_anterio_axis(xy_idx,xy_pos)
+        % Find valid ommatidia:
+        idselect = (xy_select>0)|((xy_select<crr_deletelevel));
         % Find poster-antero axis
             figure;
             imshow(I);
             hold on;
             view([view90clockwise*90 90]);
-            answer = questdlg('Select eye side?','Is this a left or a right eye?','Left','Right','Cancel','Cancel');
-            switch answer
-                case 'Cancel'
-                    return;
-                case 'Left'
-                    isright = 0;
-                case 'Right'
-                    isright = 1;
-            end
+            %answer = questdlg('Select eye side?','Is this a left or a right eye?','Left','Right','Cancel','Cancel');
+            %switch answer
+            %    case 'Cancel'
+            %        return;
+            %    case 'Left'
+            %        isright = 0;
+            %    case 'Right'
+            %        isright = 1;
+            %end
         % draw x-y axis:
             xy_neibor = [1 0  -1  -1  0  1;...
                 0  1  1  0 -1 -1]';            
@@ -454,7 +450,7 @@ function MAIN_manual_correction(raw_image)
                 % Plot 1st axes:
                 pttmp_x = [];
                 for i=-20:20
-                    idx_new = find((xy_idx(:,1)==i) & (xy_idx(:,2)==0));
+                    idx_new = find(idselect&(xy_idx(:,1)==i) & (xy_idx(:,2)==0));
                     if idx_new
                         pttmp_x = [pttmp_x idx_new];
                     end
@@ -463,7 +459,7 @@ function MAIN_manual_correction(raw_image)
                 % Plot 2nd axes:
                 pttmp_x = [];
                 for i=-20:20
-                    idx_new = find((xy_idx(:,1)==0) & (xy_idx(:,2)==i));
+                    idx_new = find(idselect&(xy_idx(:,1)==0) & (xy_idx(:,2)==i));
                     if idx_new
                         pttmp_x = [pttmp_x idx_new];
                     end
@@ -472,7 +468,7 @@ function MAIN_manual_correction(raw_image)
                 % Plot 3rd axes:
                 pttmp_x = [];
                 for i=-20:20
-                    idx_new = find((xy_idx(:,1)==-i) & (xy_idx(:,2)==i));
+                    idx_new = find(idselect&(xy_idx(:,1)==-i) & (xy_idx(:,2)==i));
                     if idx_new
                         pttmp_x = [pttmp_x idx_new];
                     end
@@ -489,20 +485,22 @@ function MAIN_manual_correction(raw_image)
         closest_dst = 1e10;
         closest_idx = 0;
         for i=1:size(xy_pos,1)
-            % find the next one:
-            dst = sqrt(sum((xy_pos(i,:) - [xi(1) yi(1)]).^2));
-            if dst <closest_dst
-                cnt_nbg = 0;
-                for j=1:6
-                    xy_new = xy_idx(i,:) + xy_neibor(j,:);
-                    idx_new = find((xy_idx(:,1)==xy_new(1)) & (xy_idx(:,2)==xy_new(2)));
-                    if idx_new
-                        cnt_nbg = cnt_nbg + 1;
+            if idselect(i)
+                % find the next one:
+                dst = sqrt(sum((xy_pos(i,:) - [xi(1) yi(1)]).^2));
+                if dst <closest_dst
+                    cnt_nbg = 0;
+                    for j=1:6
+                        xy_new = xy_idx(i,:) + xy_neibor(j,:);
+                        idx_new = find((xy_idx(:,1)==xy_new(1)) & (xy_idx(:,2)==xy_new(2)));
+                        if idx_new
+                            cnt_nbg = cnt_nbg + 1;
+                        end
                     end
-                end
-                if cnt_nbg>=6
-                    closest_dst = dst;
-                    closest_idx = i;
+                    if cnt_nbg>=6
+                        closest_dst = dst;
+                        closest_idx = i;
+                    end
                 end
             end
         end
@@ -562,15 +560,16 @@ function MAIN_manual_correction(raw_image)
         view([view90clockwise*90 90]);
         hold on;
         col_bin = unique(col_idx);
-        omtd_count = hist(col_idx,col_bin);
+        omtd_count = hist(col_idx(idselect),col_bin);
         alpha_range = linspace(1,0.2,numel(col_bin)).^2;
         for i=1:numel(col_bin)
             col = col_bin(i);
             color_ = 'rgb';
             color_ = color_(mod(col,3)+1);
-            scatter(xy_pos(col_idx==col,2),xy_pos(col_idx==col,1),'MarkerFaceColor',color_,'MarkerFaceAlpha',alpha_range(i));
-            scatter(xy_pos(col_idx==col,2),xy_pos(col_idx==col,1),'MarkerFaceColor',color_,'MarkerFaceAlpha',alpha_range(i));
-            scatter(xy_pos(col_idx==col,2),xy_pos(col_idx==col,1),'MarkerFaceColor',color_,'MarkerFaceAlpha',alpha_range(i));
+            selected_omtd = idselect&(col_idx==col);
+            scatter(xy_pos(selected_omtd,2),xy_pos(selected_omtd,1),'MarkerFaceColor',color_,'MarkerFaceAlpha',alpha_range(i));
+            scatter(xy_pos(selected_omtd,2),xy_pos(selected_omtd,1),'MarkerFaceColor',color_,'MarkerFaceAlpha',alpha_range(i));
+            scatter(xy_pos(selected_omtd,2),xy_pos(selected_omtd,1),'MarkerFaceColor',color_,'MarkerFaceAlpha',alpha_range(i));
         end
         axis equal
         set(gca,'XTick',[],'YTick',[]);
@@ -611,11 +610,14 @@ function MAIN_manual_correction(raw_image)
             case 'e'
                 if strcmp(eventdata.Modifier,'control')
                     export_label();
-                    get_profile();
+                    get_profile(xy_idx,xy_pos);
+                    export_csv(xy_idx_new,xy_pos);
                 end
             case 'i'
                 if strcmp(eventdata.Modifier,'control')
                     align_label();
+                    get_profile(xy_idx_aligned,xy_pos_aligned);
+                    export_csv(xy_idx_new,xy_pos_aligned);
                 end
             case 'h'
                 % save progress
