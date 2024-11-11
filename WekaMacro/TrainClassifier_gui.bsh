@@ -13,6 +13,7 @@ import ij.io.FileSaver;
 import ij.ImagePlus;
 import org.apache.commons.io.FilenameUtils;
 import hr.irb.fastRandomForest.FastRandomForest;
+import java.io.File;
 
 listOfOriFiles = inputOriDir.listFiles();
 listOfLabelFiles = inputLabelDir.listFiles();
@@ -35,6 +36,8 @@ startTime = System.currentTimeMillis();
 	// set classifier
 	segmentator.setClassifier( rf );
 	
+
+	new File(outputTestDir.getPath()).mkdirs();
 	
 	for ( i = 0; i < listOfOriFiles.length; i++ )
 	{
@@ -184,6 +187,7 @@ startTime = System.currentTimeMillis();
 	             
 	            // save result as TIFF in output folder
 	            outputFileName = listOfFiles[ i ].getName().replaceFirst("[.][^.]+$", "") + "_inout.tif";
+	            
 	            new FileSaver( result ).saveAsTiff( outputTestDir.getPath() + File.separator + outputFileName );
 	  
 	            // force garbage collection (important for large images)
