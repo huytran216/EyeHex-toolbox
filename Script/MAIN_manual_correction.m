@@ -112,10 +112,6 @@ function MAIN_manual_correction(raw_image)
         if numel(dat_probmap_list)
             fload = dat_probmap_list(end-latest_minus);
             datfile = load(fullfile(datafolder,fld_name,['dat_probmap' num2str(fload)]),'xy_pos','grid_size','xy_idx','parent_idx','score','xymap');
-        else
-            msgbox('No data found. Do hexagon expansion first');
-        end
-        if numel(datfile)
             % Data loaded pre alignment
             xy_pos = datfile.xy_pos;
             xy_idx = datfile.xy_idx;
@@ -124,6 +120,8 @@ function MAIN_manual_correction(raw_image)
             [I_circle,x0,y0,I_edge] = create_I_circle(10,0.7);  % default grid_size = 10
             maxIcircle = max(I_circle(:));
             score = datfile.score;
+        else
+            msgbox('No data found. Do hexagon expansion first');
         end
         % Offset for xy coordinate
         offset = 100;
@@ -132,7 +130,7 @@ function MAIN_manual_correction(raw_image)
             parent_idx_aligned = [];
             xy_idx_aligned = [];
         % Save data tip
-        save('tmp_datatip.mat','xy_pos','xy_idx');
+        save('tmp_datatip.mat','xy_pos','xy_idx','xy_idx_new');
         % Reset delete level:
         xy_select=xy_pos(:,1)*0+1;
         crr_deletelevel = 0;
@@ -202,7 +200,7 @@ function MAIN_manual_correction(raw_image)
         % Set orientation:
         view([view90clockwise*90 90]);
 
-        dcm_obj = datacursormode(fmain);
+        dcm_obj = datacursormode(gcf);
         set(dcm_obj,'UpdateFcn',@NewCallback_axes);
 
         first_refreshed = false;
@@ -214,7 +212,7 @@ function MAIN_manual_correction(raw_image)
         strmessage = [strmessage  num2str(sum(idselect)) 'eyes found'];
         title(strmessage,'Interpreter','none');
         
-        save('tmp_datatip.mat','xy_pos','xy_idx');        
+        save('tmp_datatip.mat','xy_pos','xy_idx','xy_idx_new');
     end
     %% Remove odd hexagon if needed
     function rm_region()
@@ -434,15 +432,6 @@ function MAIN_manual_correction(raw_image)
             imshow(I);
             hold on;
             view([view90clockwise*90 90]);
-            %answer = questdlg('Select eye side?','Is this a left or a right eye?','Left','Right','Cancel','Cancel');
-            %switch answer
-            %    case 'Cancel'
-            %        return;
-            %    case 'Left'
-            %        isright = 0;
-            %    case 'Right'
-            %        isright = 1;
-            %end
         % draw x-y axis:
             xy_neibor = [1 0  -1  -1  0  1;...
                 0  1  1  0 -1 -1]';            
@@ -475,111 +464,146 @@ function MAIN_manual_correction(raw_image)
                 end
                 plot(xy_pos(pttmp_x,2),xy_pos(pttmp_x,1),'color','b','LineStyle','--','LineWidth',2);
             % Select points to identify the postero-antero axes:
-            title('Select two points to identify the eye''s antero-poster axes');
-            [yi,xi] = getpts(gca);
-            % take only last two points:
-            xi = xi(end-1:end);
-            yi = yi(end-1:end);
-            close(gcf);
-        % Get the closest points that have at least 3 neighbor:
-        closest_dst = 1e10;
-        closest_idx = 0;
-        for i=1:size(xy_pos,1)
-            if idselect(i)
-                % find the next one:
-                dst = sqrt(sum((xy_pos(i,:) - [xi(1) yi(1)]).^2));
-                if dst <closest_dst
-                    cnt_nbg = 0;
-                    for j=1:6
-                        xy_new = xy_idx(i,:) + xy_neibor(j,:);
-                        idx_new = find((xy_idx(:,1)==xy_new(1)) & (xy_idx(:,2)==xy_new(2)));
-                        if idx_new
-                            cnt_nbg = cnt_nbg + 1;
+                example_AP_setup = imread(fullfile('aux_img','example_AP_setup.png'));
+                waitfor(msgbox_img('Select two points to identify the eye''s postero-antero axes then press Enter. See example above','Setting up AP axis','custom',example_AP_setup));
+                title('Select two points to identify the eye''s postero-antero axes then press Enter');
+                [yi,xi] = getpts(gca);
+                % take only last two points:
+                xi = xi(end-1:end);
+                yi = yi(end-1:end);
+                close(gcf);
+            % Get the closest omtd to the selected points that have at least 3 neighbor:
+            closest_dst = 1e10;
+            closest_idx = 0;
+            for i=1:size(xy_pos,1)
+                if idselect(i)
+                    % find the next one:
+                    dst = sqrt(sum((xy_pos(i,:) - [xi(1) yi(1)]).^2));
+                    if dst <closest_dst
+                        cnt_nbg = 0;
+                        for j=1:6
+                            xy_new = xy_idx(i,:) + xy_neibor(j,:);
+                            idx_new = find(idselect&(xy_idx(:,1)==xy_new(1)) & (xy_idx(:,2)==xy_new(2)));
+                            if idx_new
+                                cnt_nbg = cnt_nbg + 1;
+                            end
                         end
-                    end
-                    if cnt_nbg>=6
-                        closest_dst = dst;
-                        closest_idx = i;
+                        if cnt_nbg>=6
+                            closest_dst = dst;
+                            closest_idx = i;
+                        end
                     end
                 end
             end
-        end
-        % Find the closest orientation:
-        nbg_list= [];
-        for j=1:6
-            xy_new = xy_idx(closest_idx,:) + xy_neibor(j,:);
-            idx_new = find((xy_idx(:,1)==xy_new(1)) & (xy_idx(:,2)==xy_new(2)));
-            if idx_new
-                nbg_list(j) = idx_new;
+            % Find the closest orientation:
+            nbg_list= [];
+            for j=1:6
+                xy_new = xy_idx(closest_idx,:) + xy_neibor(j,:);
+                idx_new = find(idselect&(xy_idx(:,1)==xy_new(1)) & (xy_idx(:,2)==xy_new(2)));
+                if idx_new
+                    nbg_list(j) = idx_new;
+                end
             end
-        end
-        % Normalized input vector:
-        i = closest_idx;
-        vector_i = [diff(xi) diff(yi)]; vector_i = vector_i/sqrt(sum(vector_i.^2));
-        % find vector from center to neibor
-        vector_j = [];
-        for j=1:6
-            vector_j(j,:) = [xy_pos(nbg_list(j),:) - xy_pos(i,:)];
-            vector_j(j,:) = vector_j(j,:)./sqrt(sum(vector_j(j,:).^2));
-        end
-        % Which mid-vector from center between two neibors
-        small_sim = 0;
-        small_j = 0;
-        for j=1:6
-            % next neibor
-            nj = mod(j+1,6);
-            if nj==0
-                nj = 6;
+            % Normalized input vector:
+            i = closest_idx;
+            vector_i = [diff(xi) diff(yi)]; vector_i = vector_i/sqrt(sum(vector_i.^2));
+            % find vector from center to neighbor
+            vector_j = [];
+            for j=1:6
+                vector_j(j,:) = [xy_pos(nbg_list(j),:) - xy_pos(i,:)];
+                vector_j(j,:) = vector_j(j,:)./sqrt(sum(vector_j(j,:).^2));
             end
-            newvector = vector_j(j,:) + vector_j(nj,:);
-            newvector = newvector./sqrt(sum(newvector.^2));
-            angle_ = sum((newvector + vector_i).^2);
-            if angle_ >small_sim
-                small_sim = angle_;
-                small_j = j;
+            % Which mid-vector from center between two neighbors
+            small_sim = 0;
+            small_j = 0;
+            for j=1:6
+                % next neighbor
+                nj = mod(j+1,6);
+                if nj==0
+                    nj = 6;
+                end
+                newvector = vector_j(j,:) + vector_j(nj,:);
+                newvector = newvector./sqrt(sum(newvector.^2));
+                angle_ = sum((newvector + vector_i).^2);
+                if angle_ >small_sim
+                    small_sim = angle_;
+                    small_j = j;
+                end
             end
-        end
-        % Rotate the hexagonal axes:
-        xy_idx_new = xy_idx - ones(size(xy_idx,1),1)*xy_idx(closest_idx,:);        
-        for i = 1:size(xy_idx_new,1)
-            % convert to xyz coordinate
-            xyz = [xy_idx_new(i,2) -xy_idx_new(i,2)-xy_idx_new(i,1) xy_idx_new(i,1)];
-            % rotate angle 60o anticlock wise
-            for j = 1:small_j-1
-                xyz = -xyz;
-                xyz = xyz([3 1 2]);
-            end
-            xy_idx_new(i,:) = xyz([3 1]);
-        end        
+            % Rotate the hexagonal axes:
+                xy_idx_new = xy_idx - ones(size(xy_idx,1),1)*xy_idx(closest_idx,:);
+                for i = 1:size(xy_idx_new,1)
+                    % convert to xyz coordinate
+                    xyz = [xy_idx_new(i,2) -xy_idx_new(i,2)-xy_idx_new(i,1) xy_idx_new(i,1)];
+                    % rotate angle 60o anticlock wise
+                    for j = 1:small_j-1
+                        xyz = -xyz;
+                        xyz = xyz([3 1 2]);
+                    end
+                    xy_idx_new(i,:) = xyz([3 1]);
+                end
+            % Anchoring to the middle of the eye
+                xy_mid = median(xy_pos(idselect,:));
+                [~,xy_mid]=min((xy_pos(idselect,1)-xy_mid(1)).^2 + (xy_pos(idselect,2)-xy_mid(2)).^2);
+                xy_origin = xy_idx_new(xy_mid,:);
+                xy_idx_new(:,1) = xy_idx_new(:,1) - xy_origin(1);
+                xy_idx_new(:,2) = xy_idx_new(:,2) - xy_origin(2);
         % Plot rows
-        figure;
-        subplot(121);
-        col_idx = nansum(xy_idx_new,2);
-        imshow(I);
-        title({'Ommatidia columns sorted by color','(bright posterior > faded anterior)'});
-        view([view90clockwise*90 90]);
-        hold on;
-        col_bin = unique(col_idx);
-        omtd_count = hist(col_idx(idselect),col_bin);
-        alpha_range = linspace(1,0.2,numel(col_bin)).^2;
-        for i=1:numel(col_bin)
-            col = col_bin(i);
-            color_ = 'rgb';
-            color_ = color_(mod(col,3)+1);
-            selected_omtd = idselect&(col_idx==col);
-            scatter(xy_pos(selected_omtd,2),xy_pos(selected_omtd,1),'MarkerFaceColor',color_,'MarkerFaceAlpha',alpha_range(i));
-            scatter(xy_pos(selected_omtd,2),xy_pos(selected_omtd,1),'MarkerFaceColor',color_,'MarkerFaceAlpha',alpha_range(i));
-            scatter(xy_pos(selected_omtd,2),xy_pos(selected_omtd,1),'MarkerFaceColor',color_,'MarkerFaceAlpha',alpha_range(i));
-        end
-        axis equal
-        set(gca,'XTick',[],'YTick',[]);
+            fanalysis = figure('Name','Ommatidia columns sorted by color (bright posterior > faded anterior)');
+            col_idx = nansum(xy_idx_new,2);
+            imshow(I);
+            view([view90clockwise*90 90]);
+            hold on;
+            col_bin = unique(col_idx);
+            omtd_count = hist(col_idx(idselect),col_bin);
+            alpha_range = linspace(1,0.2,numel(col_bin)).^2;
+            for i=1:numel(col_bin)
+                col = col_bin(i);
+                color_ = 'rgb';
+                color_ = color_(mod(col,3)+1);
+                selected_omtd = idselect&(col_idx==col);
+                scatter(xy_pos(selected_omtd,2),xy_pos(selected_omtd,1),'MarkerFaceColor',color_,'MarkerFaceAlpha',alpha_range(i));
+                %scatter(xy_pos(selected_omtd,2),xy_pos(selected_omtd,1),'MarkerFaceColor',color_,'MarkerFaceAlpha',alpha_range(i));
+                %scatter(xy_pos(selected_omtd,2),xy_pos(selected_omtd,1),'MarkerFaceColor',color_,'MarkerFaceAlpha',alpha_range(i));
+            end
+            set(gca,'XTick',[],'YTick',[]);
+            axis equal
+        %% Identify the dorsal of the eye:
+            example_VD_setup = imread(fullfile('aux_img','example_VD_setup.png'));
+            waitfor(msgbox_img('Click on the most dorsal edge of the eye then press Enter. See example above','Setting up VD axis','custom',example_VD_setup));
+            title('Click on the most dorsal edge of the eye then press Enter');
+            [xd,yd] = getpts(gca);
+            xd = xd(end);yd = yd(end);
+            % Find the nearest omtd to the selected point
+            omtd_col = find(col_idx==median(col_idx(idselect)));
+            [~,closest_omtd] = min((xy_pos(omtd_col,2)-xd).^2 + (xy_pos(omtd_col,1)-yd).^2);
+            closest_omtd = omtd_col(closest_omtd);
+            % Find all omtd in the same column
+            if (xy_idx_new(closest_omtd,1)>0)&&(xy_idx_new(closest_omtd,2)<0)
+                % 'good - no need to do anything'
+            elseif (xy_idx_new(closest_omtd,1)>0)&&(xy_idx_new(closest_omtd,2)>0)
+                % non-sense input?
+            elseif (xy_idx_new(closest_omtd,1)<0)&&(xy_idx_new(closest_omtd,2)>0)
+                % flip:
+                tmp=xy_idx_new(:,2);
+                xy_idx_new(:,2) = xy_idx_new(:,1);
+                xy_idx_new(:,1) = tmp;
+            elseif (xy_idx_new(closest_omtd,1)<0)&&(xy_idx_new(closest_omtd,2)<0)
+                % non-sense input?
+            end
+        %% Create datatip
+            save('tmp_datatip.mat','xy_pos','xy_idx','xy_idx_new');
+            dcm_obj = datacursormode(fanalysis);
+            set(dcm_obj,'UpdateFcn',@NewCallback_axes);
         %% make row profile:
-        subplot(122);
-        col_bin = col_bin - min(col_bin);
-        title('Column profile');
-        plot(col_bin,omtd_count); hold on;
-        xlabel('Column index');
-        ylabel('Ommatidia count');
+            title('V','Visible','off');
+            figure;
+            col_bin = col_bin - min(col_bin);
+            col_x = find(omtd_count,1,'first'):numel(col_bin);
+            title('Column profile');
+            plot(col_bin(col_x),omtd_count(col_x)); hold on;
+            xlabel('Column index');
+            ylabel('Ommatidia count');
     end
     %% Set hotkey:
     function keypress(~, eventdata, ~)
@@ -612,6 +636,7 @@ function MAIN_manual_correction(raw_image)
                     export_label();
                     get_profile(xy_idx,xy_pos);
                     export_csv(xy_idx_new,xy_pos);
+                    refreshed();
                 end
             case 'i'
                 if strcmp(eventdata.Modifier,'control')
